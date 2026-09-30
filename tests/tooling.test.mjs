@@ -52,3 +52,13 @@ for (const mode of ['unterminated-output', 'ignore-termination']) test(`native d
  const pid = Number(fs.readFileSync(pidFile, 'utf8'));
  assert.throws(() => process.kill(pid, 0), error => error.code === 'ESRCH');
 });
+
+test('package checker accepts CRLF skill frontmatter', t => {
+ const f = fixture(t), copy = path.join(f.home, 'crlf-plugin');
+ fs.cpSync(plugin, copy, { recursive: true, filter: source => path.basename(source) !== '.git' });
+ for (const skill of ['repo-knowledge', 'repo-knowledge-setup']) {
+  const file = path.join(copy, 'skills', skill, 'SKILL.md');
+  fs.writeFileSync(file, fs.readFileSync(file, 'utf8').replace(/\r?\n/g, '\r\n'));
+ }
+ assert.deepEqual(checkPackage(copy), []);
+});

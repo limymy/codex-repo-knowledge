@@ -6,7 +6,7 @@ import { packageFiles } from './package-files.mjs';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 export function checkPackage(root = ROOT) {
   const errors = [];
-  const read = rel => fs.readFileSync(path.join(root, rel), 'utf8');
+  const read = rel => fs.readFileSync(path.join(root, rel), 'utf8').replace(/\r\n/g, '\n');
   const json = rel => JSON.parse(read(rel));
   const fail = (ok,msg) => { if (!ok) errors.push(msg); };
   try {
