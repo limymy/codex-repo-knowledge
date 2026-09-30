@@ -1,0 +1,5 @@
+interface:
+  display_name: "Repo Knowledge"
+  short_description: "Maintain current docs and lasting decisions as part of normal coding."
+policy:
+  allow_implicit_invocation: true

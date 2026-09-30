@@ -1,0 +1,33 @@
+{
+  "name": "repo-knowledge",
+  "version": "0.1.0-alpha.2+codex.20260930013123",
+  "description": "Maintain confirmed development rules, current documentation and durable design decisions during everyday Codex work.",
+  "author": {
+    "name": "Repo Knowledge contributors"
+  },
+  "license": "MIT",
+  "keywords": [
+    "codex",
+    "documentation",
+    "decision-records",
+    "repo-knowledge"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Repo Knowledge",
+    "shortDescription": "\u5728\u65e5\u5e38\u5f00\u53d1\u4e2d\u7ef4\u62a4\u4ed3\u5e93\u6587\u6863\u4e0e\u957f\u671f\u8bbe\u8ba1\u51b3\u5b9a",
+    "longDescription": "A focused repository knowledge maintenance layer for Codex: standing rules, on-demand documentation and decision guidance, and at most one review reminder per changed turn. No telemetry, automatic commits, or mandatory planning framework.",
+    "developerName": "Repo Knowledge contributors",
+    "category": "Developer Tools",
+    "capabilities": [
+      "Read",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "\u89e3\u91ca\u5f53\u524d\u4ed3\u5e93\u7684\u77e5\u8bc6\u7ef4\u62a4\u89c4\u5219\u3002",
+      "\u5c06 Repo Knowledge \u9002\u914d\u5230\u6b64\u4ed3\u5e93\uff0c\u4e0d\u4fee\u6539\u4e1a\u52a1\u4ee3\u7801\u3002"
+    ]
+  },
+  "repository": "https://github.com/limymy/codex-repo-knowledge",
+  "homepage": "https://github.com/limymy/codex-repo-knowledge"
+}

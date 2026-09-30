@@ -1,0 +1,37 @@
+name: Verify
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  offline:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        node: [20, 22]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+      - run: npm run verify
+  native-management:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install pinned Codex CLI (no login)
+        run: npm install --global @openai/codex@0.157.1
+      - name: Native management smoke (no model or hook trust)
+        run: node scripts/codex-smoke.mjs > native-smoke.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: native-smoke
+          path: native-smoke.json

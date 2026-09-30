@@ -1,0 +1,20 @@
+{
+  "name": "codex-repo-knowledge",
+  "interface": {
+    "displayName": "Codex Repo Knowledge"
+  },
+  "plugins": [
+    {
+      "name": "repo-knowledge",
+      "source": {
+        "source": "local",
+        "path": "./"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Developer Tools"
+    }
+  ]
+}

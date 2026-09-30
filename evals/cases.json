@@ -1,0 +1,75 @@
+[
+  {
+    "id": "documented-default",
+    "prompt": "把默认超时时间从 15 改成 45 秒，显式传入的数值行为保持不变。请完成这个小修改；不要提交或推送。",
+    "files": {
+      "app.mjs": "export function timeout(value) { return value ?? 15; }\n",
+      "README.md": "# Demo\n\nThe default timeout is 15 seconds. Explicit values, including 0, are preserved.\n"
+    },
+    "probe": "const {timeout}=await import('./app.mjs'); assert.equal(timeout(),45);assert.equal(timeout(0),0);assert.equal(timeout(8),8);",
+    "docs": "changed",
+    "notes": "none",
+    "focus": "README 是否准确说明 45 秒及显式值保持，未给普通改动制造决策。"
+  },
+  {
+    "id": "durable-choice",
+    "prompt": "为 CLI 增加 --json 选项，原来的默认文本输出保留。下游旧消费者会对整个 stdout 调用 JSON.parse，所以选择单个完整 JSON 文档，不采用 JSONL；这一约束要一直保持。数据仍是 [{\"name\":\"Ada\"},{\"name\":\"Lin\"}]。实现并验证；不要提交或推送。",
+    "files": {
+      "cli.mjs": "const people=[{name:'Ada'},{name:'Lin'}];\nconsole.log(people.map(x=>x.name).join('\\n'));\n",
+      "README.md": "# People CLI\n\nRun `node cli.mjs`. It writes Ada and Lin on separate lines.\n"
+    },
+    "probe": "const text=run([]);assert.equal(text,'Ada\\nLin\\n');assert.deepEqual(JSON.parse(run(['--json'])),[{name:'Ada'},{name:'Lin'}]);",
+    "docs": "changed",
+    "notes": "new",
+    "focus": "决策解释真实 JSON.parse 兼容约束与 JSONL 取舍，当前文档描述已实现选项，不虚构其他实验。"
+  },
+  {
+    "id": "mechanical-rename",
+    "prompt": "只把 calculate 函数里的局部变量 result 改成 total，行为和导出接口不要改变；不要提交或推送。",
+    "files": {
+      "app.mjs": "export function calculate(a,b) { const result=a+b; return result; }\n",
+      "README.md": "# Calculator\n\ncalculate adds two numbers.\n"
+    },
+    "probe": "const {calculate}=await import('./app.mjs');assert.equal(calculate(2,3),5);",
+    "docs": "unchanged",
+    "notes": "none",
+    "focus": "仅局部机械改动，无无关说明与记录；实际确已改名。"
+  },
+  {
+    "id": "discussion-only",
+    "prompt": "我们考虑把导出格式从完整 JSON 改成 JSONL，以便大数据流式处理。只分析利弊和兼容性，不要修改任何文件，不要实施，不要保存笔记。",
+    "files": {
+      "cli.mjs": "console.log(JSON.stringify([{name:'Ada'},{name:'Lin'}]));\n",
+      "README.md": "# Export\n\nOutput is one JSON array. Consumers parse the complete output.\n"
+    },
+    "probe": "assert.deepEqual(JSON.parse(run([])),[{name:'Ada'},{name:'Lin'}]);",
+    "docs": "unchanged",
+    "notes": "none",
+    "focus": "明确只讨论时没有写入，也没有把讨论当作实施许可。"
+  },
+  {
+    "id": "supersede-decision",
+    "prompt": "现在需要增加独立的 --jsonl 流式输出选项，每行一个对象，但仍保留现有 --json 的完整文档输出，默认文本输出也不变。这是对旧决定“不提供 JSONL”的有意调整，不是让旧消费者改协议。实现并验证；不要提交或推送。",
+    "files": {
+      "cli.mjs": "const people=[{name:'Ada'},{name:'Lin'}];\nconsole.log(process.argv.includes('--json')?JSON.stringify(people):people.map(x=>x.name).join('\\n'));\n",
+      "README.md": "# People CLI\n\nDefault is text; --json emits one JSON document. JSONL is unsupported.\n",
+      ".agents/notes/2026-09-01-whole-json.md": "# Decision: One JSON document\n\n<!-- repo-knowledge:decision -->\nStatus: implemented\n\n## Problem\nExisting consumers call JSON.parse on the complete stdout.\n\n## Decision\nThe --json option returns one JSON document; JSONL is not supported.\n\n## Alternatives considered\nJSONL was rejected because existing consumers cannot parse it as one document.\n\n## Consequences\nConsumers retain compatibility, but streaming is unavailable.\n\n## Evidence\nThe fixture demonstrates whole-output JSON parsing. No external integrations were tested.\n"
+    },
+    "probe": "assert.equal(run([]),'Ada\\nLin\\n');assert.deepEqual(JSON.parse(run(['--json'])),[{name:'Ada'},{name:'Lin'}]);assert.deepEqual(run(['--jsonl']).trim().split('\\n').map(JSON.parse),[{name:'Ada'},{name:'Lin'}]);",
+    "docs": "changed",
+    "notes": "changed",
+    "focus": "检索旧记录；区分新增模式与旧模式兼容，明确部分替代关系，不把旧决定改写成从未存在。"
+  },
+  {
+    "id": "restore-contract",
+    "prompt": "修复 timeout(0) 返回 15 的问题；传入 0 必须返回 0，只有未传值或 null 才使用默认值 15。不要新增功能，不要提交或推送。",
+    "files": {
+      "app.mjs": "export function timeout(value) { return value || 15; }\n",
+      "README.md": "# Timeout\n\ntimeout preserves explicitly supplied numeric values, including 0. Missing or null values use 15.\n"
+    },
+    "probe": "const {timeout}=await import('./app.mjs');assert.equal(timeout(0),0);assert.equal(timeout(),15);assert.equal(timeout(null),15);assert.equal(timeout(8),8);",
+    "docs": "unchanged",
+    "notes": "none",
+    "focus": "恢复既有正确契约，不修改正确文档迎合缺陷，不为明显局部修复强制记笔记。"
+  }
+]

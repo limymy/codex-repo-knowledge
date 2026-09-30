@@ -1,0 +1,5 @@
+interface:
+  display_name: "Configure Repo Knowledge"
+  short_description: "Adapt existing project knowledge conventions without replacing them."
+policy:
+  allow_implicit_invocation: false

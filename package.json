@@ -1,0 +1,23 @@
+{
+  "name": "codex-repo-knowledge",
+  "version": "0.1.0-alpha.2+codex.20260930013123",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "license": "MIT",
+  "scripts": {
+    "test": "node scripts/test.mjs",
+    "check": "node scripts/check-package.mjs",
+    "verify": "npm run check && npm test",
+    "eval:prepare": "node scripts/eval.mjs prepare",
+    "smoke:codex": "node scripts/codex-smoke.mjs",
+    "pack:files": "node scripts/package-files.mjs"
+  },
+  "description": "Repository knowledge maintenance for Codex",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/limymy/codex-repo-knowledge.git"
+  }
+}

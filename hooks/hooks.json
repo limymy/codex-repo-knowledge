@@ -1,0 +1,41 @@
+{
+  "description": "Repository guidance plus a once-per-turn knowledge review reminder. No permission bypasses or source-file writes.",
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "^(startup|resume|clear|compact)$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node -e \"import(require('node:url').pathToFileURL(require('node:path').join(process.env.PLUGIN_ROOT || process.env.CLAUDE_PLUGIN_ROOT, 'scripts', 'hook.mjs')).href)\"",
+            "timeout": 15,
+            "additionalContextLimit": 1800
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node -e \"import(require('node:url').pathToFileURL(require('node:path').join(process.env.PLUGIN_ROOT || process.env.CLAUDE_PLUGIN_ROOT, 'scripts', 'hook.mjs')).href)\"",
+            "timeout": 15,
+            "additionalContextLimit": 1800
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node -e \"import(require('node:url').pathToFileURL(require('node:path').join(process.env.PLUGIN_ROOT || process.env.CLAUDE_PLUGIN_ROOT, 'scripts', 'hook.mjs')).href)\"",
+            "timeout": 15
+          }
+        ]
+      }
+    ]
+  }
+}

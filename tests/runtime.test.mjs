@@ -1,0 +1,116 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fixture, hookProcess, plugin } from './helpers.mjs';
+import { handleEvent, recordReview, ackArguments } from '../scripts/lib/runtime.mjs';
+import { stateKey, openStore, readState, writeState } from '../scripts/lib/store.mjs';
+import { snapshot } from '../scripts/lib/git.mjs';
+
+function start(f, extra = {}) { return handleEvent(f.event('UserPromptSubmit', extra), f.env); }
+function stop(f, extra = {}) { return handleEvent(f.event('Stop', extra), f.env); }
+function ack(f, extra = {}) { return recordReview({ dataRoot: f.data, key: stateKey(f.repo, 'session-one', 'turn-one'), docs: 'not-needed', notes: 'not-needed', reason: 'Mechanical internal change only.', ...extra }); }
+
+test('SessionStart supplies guidance and resources without changing repository files', t => {
+  const f = fixture(t); const before = snapshot(f.repo);
+  const r = handleEvent(f.event('SessionStart'), f.env);
+  assert.equal(r.hookSpecificOutput.hookEventName, 'SessionStart');
+  assert.ok(r.hookSpecificOutput.additionalContext.includes('standing maintenance duties'));
+  assert.ok(r.hookSpecificOutput.additionalContext.includes(plugin));
+  assert.deepEqual(snapshot(f.repo), before); assert.deepEqual(fs.readdirSync(f.data), []);
+});
+for (const source of ['startup', 'resume', 'clear', 'compact']) test(`SessionStart ${source} reinjects the bounded rules`, t => {
+  const f = fixture(t); const r = hookProcess(f, f.event('SessionStart', { source }));
+  assert.equal(r.hookSpecificOutput.hookEventName, 'SessionStart');
+  assert.ok(Buffer.byteLength(r.hookSpecificOutput.additionalContext) < 12000);
+});
+test('unchanged worktree does not request continuation', t => { const f = fixture(t); start(f); assert.deepEqual(stop(f), {}); });
+test('pre-existing dirty file alone does not request continuation', t => { const f = fixture(t, { dirty: true }); start(f); assert.deepEqual(stop(f), {}); });
+test('editing the already dirty file is detected by content', t => {
+  const f = fixture(t, { dirty: true }); start(f); f.write('app.js', 'export const value = 3;\n'); assert.equal(stop(f).decision, 'block');
+});
+test('new untracked source triggers exactly one reminder', t => {
+  const f = fixture(t); start(f); f.write('new.js', 'export {};\n');
+  assert.equal(stop(f).decision, 'block'); assert.deepEqual(stop(f), {});
+});
+test('host stop_hook_active prevents recursion before looking at state', t => {
+  const f = fixture(t); start(f); f.write('app.js', 'changed'); assert.deepEqual(stop(f, { stop_hook_active: true }), {});
+});
+test('receipt permits not-needed outcomes without any Markdown change', t => {
+  const f = fixture(t); start(f); f.write('app.js', 'changed'); ack(f); assert.deepEqual(stop(f), {});
+  assert.ok(!fs.existsSync(path.join(f.repo, 'docs'))); assert.ok(!fs.existsSync(path.join(f.repo, '.agents')));
+});
+test('receipt permits honest deferral', t => {
+  const f = fixture(t); start(f); f.write('app.js', 'changed'); ack(f, { docs: 'deferred', notes: 'deferred', reason: 'User prohibited documentation edits.' }); assert.deepEqual(stop(f), {});
+});
+test('receipt becomes stale after further edits', t => {
+  const f = fixture(t); start(f); f.write('app.js', 'a'); ack(f); f.write('app.js', 'b'); assert.equal(stop(f).decision, 'block');
+});
+test('another session cannot acknowledge this session', t => {
+  const f = fixture(t); start(f); start(f, { session_id: 'session-two' }); f.write('app.js', 'a');
+  ack(f, { key: stateKey(f.repo, 'session-two', 'turn-one') }); assert.equal(stop(f).decision, 'block');
+});
+test('another turn cannot acknowledge this turn', t => {
+  const f = fixture(t); start(f); start(f, { turn_id: 'turn-two' }); f.write('app.js', 'a');
+  ack(f, { key: stateKey(f.repo, 'session-one', 'turn-two') }); assert.equal(stop(f).decision, 'block');
+});
+test('same ids in different repositories do not share keys', t => {
+  const f = fixture(t), g = fixture(t); assert.notEqual(stateKey(f.repo, 's', 't'), stateKey(g.repo, 's', 't'));
+});
+test('duplicate UserPromptSubmit preserves original baseline and reminder budget', t => {
+  const f = fixture(t); start(f); f.write('app.js', 'a'); start(f); assert.equal(stop(f).decision, 'block'); start(f); assert.deepEqual(stop(f), {});
+});
+test('no baseline is fail-open, not a scan of old changes', t => { const f = fixture(t, { dirty: true }); assert.deepEqual(stop(f), {}); });
+test('large changed file fails open rather than silently claiming a clean review', t => {
+  const f = fixture(t); start(f); f.write('big.bin', Buffer.alloc(1048577)); const r = stop(f); assert.ok(r.systemMessage); assert.equal(r.decision, undefined);
+});
+test('disabled repository emits nothing and stores nothing', t => {
+  const f = fixture(t); f.write('.repo-knowledge.json', '{"enabled":false}');
+  for (const event of ['SessionStart', 'UserPromptSubmit', 'Stop']) assert.deepEqual(handleEvent(f.event(event), f.env), {});
+  assert.deepEqual(fs.readdirSync(f.data), []);
+});
+test('stopReminder off retains startup guidance but no turn state', t => {
+  const f = fixture(t); f.write('.repo-knowledge.json', '{"stopReminder":"off"}');
+  assert.ok(handleEvent(f.event('SessionStart'), f.env).hookSpecificOutput); assert.deepEqual(start(f), {}); assert.deepEqual(stop(f), {});
+});
+test('plan mode does not create receipts or request continuation', t => {
+  const f = fixture(t); assert.deepEqual(start(f, { permission_mode: 'plan' }), {}); assert.deepEqual(stop(f, { permission_mode: 'plan' }), {}); assert.deepEqual(fs.readdirSync(f.data), []);
+});
+test('identified subagent does not touch parent state', t => {
+  const f = fixture(t); assert.deepEqual(start(f, { agent_id: 'child' }), {}); assert.deepEqual(fs.readdirSync(f.data), []);
+});
+test('missing turn id disables reminder explicitly', t => {
+  const f = fixture(t); const r = start(f, { turn_id: undefined }); assert.ok(r.systemMessage.includes('turn')); assert.deepEqual(stop(f, { turn_id: undefined }), {});
+});
+test('missing PLUGIN_DATA is a visible fail-open warning via real hook command', t => {
+  const f = fixture(t); const r = hookProcess(f, f.event('UserPromptSubmit'), { PLUGIN_DATA: '', CLAUDE_PLUGIN_DATA: '' }); assert.ok(r.systemMessage.includes('PLUGIN_DATA'));
+});
+test('malformed config is reported without granting new work', t => {
+  const f = fixture(t); f.write('.repo-knowledge.json', '{bad'); const r = hookProcess(f, f.event('SessionStart')); assert.ok(r.systemMessage); assert.equal(r.decision, undefined);
+});
+test('hook launcher works when installed path contains spaces and a single quote', t => {
+  const f = fixture(t); const copy = path.join(f.home, "plugin space and 'quote"); fs.cpSync(plugin, copy, { recursive: true });
+  const r = hookProcess(f, f.event('SessionStart'), { PLUGIN_ROOT: copy }); assert.ok(r.hookSpecificOutput.additionalContext.includes('standing maintenance duties'));
+});
+test('prompt and transcript contents are never stored or reflected', t => {
+  const f = fixture(t); start(f, { prompt: 'PRIVATE_SENTINEL', transcript_path: '/private/PRIVATE_SENTINEL' });
+  const dir = openStore(f.data, f.repo); const state = fs.readFileSync(path.join(dir, fs.readdirSync(dir)[0]), 'utf8'); assert.ok(!state.includes('PRIVATE_SENTINEL'));
+});
+test('review command is a literal argv array, not injected shell text', t => {
+  const f = fixture(t); const key = stateKey(f.repo, 's', 't'); const args = ackArguments('/tmp/a;touch evil', key); assert.equal(args[args.indexOf('--data-dir') + 1], '/tmp/a;touch evil');
+});
+test('committing a change is detected even with a clean worktree', t => {
+  const f = fixture(t); start(f); f.write('app.js', 'changed'); f.git('add', '.'); f.git('commit', '-qm', 'changed'); assert.equal(stop(f).decision, 'block');
+});
+test('corrupt state fails open through the process boundary', t => {
+  const f = fixture(t); start(f); const dir = openStore(f.data, f.repo); fs.writeFileSync(path.join(dir, fs.readdirSync(dir)[0]), 'bad');
+  const r = hookProcess(f, f.event('Stop')); assert.ok(r.systemMessage); assert.equal(r.decision, undefined);
+});
+test('stale state expires instead of reusing previous session assumptions', t => {
+  const f = fixture(t); start(f); const dir = openStore(f.data, f.repo), key = stateKey(f.repo, 'session-one', 'turn-one');
+  const s = readState(dir, key); s.created -= 8 * 24 * 3600000; writeState(dir, key, s); f.write('app.js', 'a'); assert.deepEqual(stop(f), {});
+});
+test('invalid review outcomes and empty explanations are rejected', t => {
+  const f = fixture(t); start(f); assert.throws(() => ack(f, { docs: 'passed' })); assert.throws(() => ack(f, { reason: '' }));
+});
+test('unknown hook event performs no work', t => { const f = fixture(t); assert.deepEqual(handleEvent(f.event('SessionEnd'), f.env), {}); });
