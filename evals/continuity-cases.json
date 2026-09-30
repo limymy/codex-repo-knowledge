@@ -1,0 +1,357 @@
+[
+  {
+    "id": "later-decision-retrieval",
+    "files": {
+      "cli.mjs": "const people=[{name:'Ada'},{name:'Lin'}];\nconsole.log(people.map(x=>x.name).join('\\n'));\n",
+      "README.md": "# People CLI\n\nRun `node cli.mjs` for one name per line.\n"
+    },
+    "stages": [
+      {
+        "id": "create-constraint",
+        "session": "fresh",
+        "prompt": "增加 --json 输出选项；旧消费者用 JSON.parse 解析整个 stdout，所以输出必须是单个完整 JSON 数组，不采用 JSONL。默认文本保持不变。实现并验证，不提交或推送。",
+        "review": [
+          "当前 README 正确描述已实现选项",
+          "兼容性取舍留下必要且可检索的持久依据；若 owning README 已完整承载理由，不强制另建 note",
+          "不复制整段开发过程"
+        ]
+      },
+      {
+        "id": "reuse-in-new-task",
+        "session": "fresh-with-repository-only",
+        "prompt": "数据量增大了，请降低导出时的序列化峰值内存，用逐条写出的方式实现流式输出，保持现有默认行为和选项兼容。实现并验证，不提交或推送。",
+        "review": [
+          "普通需求未提示读取旧决定，仍检索并实际读取第一阶段承载理由的所有者（README 或 ADR/notes），不要求特定文件形态",
+          "逐条输出仍组成单个合法 JSON 数组，默认文本不变",
+          "复用知识所有者并更新当前事实，不制造重复解释或重新反驳已经确认的约束",
+          "不把仅有文件改动或 receipt 当成已读取知识的证明"
+        ]
+      },
+      {
+        "id": "explain-history",
+        "session": "fresh-with-repository-only",
+        "prompt": "这个导出方式为什么这样设计？说明兼容性上的考虑，只分析，不修改任何文件。",
+        "review": [
+          "检索实际记录后说明旧消费者约束，区分事实和未知项",
+          "项目所有文件与阶段开始时完全相同",
+          "不要求用户执行插件命令"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "proposal-to-implementation",
+    "files": {
+      "cli.mjs": "console.log('Ada\\nLin');\n",
+      "README.md": "# People CLI\n\nThe command prints one name per line.\n"
+    },
+    "stages": [
+      {
+        "id": "record-proposal",
+        "session": "fresh",
+        "prompt": "先确定 JSON 导出方案：增加 --json，输出一个完整数组以兼容整段 JSON.parse，保留默认文本；除文本外只维护这一种机器可读协议，不提供 JSONL。允许保存必要的设计记录，但先不要修改业务代码或当前用法说明；不要提交或推送。",
+        "review": [
+          "记录明确为 proposed 或项目等价状态",
+          "写真实问题、取舍、风险与可观察验收条件，不把方案当成已实现",
+          "业务代码和当前 README 不变"
+        ]
+      },
+      {
+        "id": "implement",
+        "session": "fresh-with-repository-only",
+        "prompt": "现在实现 --json 导出选项，仍保留默认文本；完成相关验证，不提交或推送。",
+        "review": [
+          "自主找到已有提案，更新或按当地规则迁移同一记录而非再写一份",
+          "已实现部分成为 implemented/项目等价状态，未来步骤不冒充当前事实",
+          "README 只描述实际行为，记录真实验证与未验证事项"
+        ]
+      },
+      {
+        "id": "partial-replacement",
+        "session": "fresh-with-repository-only",
+        "prompt": "再增加独立 --jsonl 选项以支持逐行消费者，现有 --json 和默认文本都必须保持兼容。实现并验证，不提交或推送。",
+        "review": [
+          "找到既有 JSON 取舍，明确新增模式的边界",
+          "新增 JSONL 明确替代“只有一种机器可读协议”的选择，但整段 JSON 兼容保证仍有效；双方有效内容和部分替代关系有明确链接或归属",
+          "不把旧决定改写成从未存在，不仅因为新增记录就归档旧记录"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "existing-owners-and-rules-refresh",
+    "files": {
+      "AGENTS.md": "# Project map\n\nCurrent caller documentation lives in handbook/timeout.md. Durable design records live in architecture/adr/. API modules are under src/.\n",
+      "src/AGENTS.md": "# Validation conventions\n\nNew numeric parsers reject invalid input with TypeError. Preserve existing exports.\n",
+      "src/parsers.mjs": "// Numeric parsers for callers.\n",
+      "handbook/timeout.md": "# Numeric parser API\n\nNo numeric parser has been exported yet.\n",
+      "architecture/adr/README.md": "# Decision conventions\n\nUse existing ADR owners and statuses. Do not create a second decision directory. Record only lasting tradeoffs, not ordinary parser additions.\n"
+    },
+    "stages": [
+      {
+        "id": "scoped-rule",
+        "session": "fresh",
+        "prompt": "在 src/parsers.mjs 添加 parseTimeout(value)，接受非负整数并原样返回；其它输入抛异常。实现并验证，不提交或推送。",
+        "review": [
+          "读取适用 src/AGENTS.md，错误类型为 TypeError",
+          "更新 handbook/timeout.md，不创建默认 docs/ 或重复 README",
+          "普通新增校验无非显然取舍时不制造 ADR"
+        ]
+      },
+      {
+        "id": "changed-rule",
+        "session": "resume",
+        "before": {
+          "actor": "test-controller-only",
+          "replaceFiles": {
+            "src/AGENTS.md": "# Validation conventions\n\nNew numeric parsers reject invalid input with RangeError. Existing parser behavior remains compatible. Preserve existing exports.\n"
+          }
+        },
+        "prompt": "再添加 parseRetries(value)，接受非负整数并原样返回，其它输入抛异常。保持已有接口行为不变；实现并验证，不提交或推送。",
+        "review": [
+          "恢复后的相关规则重新读取，parseRetries 使用 RangeError",
+          "旧 parseTimeout 保持 TypeError，不能错误地把新规则追溯应用到旧契约",
+          "复用 handbook 的当前说明，不使用过期上下文决定新行为"
+        ]
+      },
+      {
+        "id": "after-compaction",
+        "session": "same-session-after-native-compaction",
+        "before": {
+          "actor": "test-controller-only",
+          "replaceFiles": {
+            "src/AGENTS.md": "# Validation conventions\n\nNew numeric parsers reject invalid input with SyntaxError. Existing parser behavior remains compatible. Preserve existing exports.\n"
+          }
+        },
+        "prompt": "再添加 parseBatchSize(value)，接受正整数并原样返回，其它输入抛异常。保持已有接口行为不变；实现并验证，不提交或推送。",
+        "review": [
+          "实际触发原生 compaction 后重新读规则，新函数用 SyntaxError",
+          "已有两个函数的行为不变",
+          "观察真实 SessionStart compact 事件，不能把构造 JSON 事件算成原生通过"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "minimal-maintenance",
+    "files": {
+      "app.mjs": "export function calculate(a,b) { const result=a+b; return result; }\nexport function timeout(value) { return value || 15; }\n",
+      "README.md": "# API\n\ncalculate adds two numbers. timeout preserves numeric values including 0; missing/null use 15.\n"
+    },
+    "stages": [
+      {
+        "id": "mechanical-change",
+        "session": "fresh",
+        "prompt": "仅将 calculate 的局部变量 result 改成 total，行为和导出接口不变。不提交或推送。",
+        "review": [
+          "仅必要代码变化，README 不变，无新增 notes/目录/索引",
+          "记录最终状态与额外续跑的耗时；正常流程不应有模型写插件数据目录的 receipt 工具调用，也不要求用户执行命令"
+        ]
+      },
+      {
+        "id": "restore-contract",
+        "session": "resume",
+        "prompt": "修复 timeout(0) 返回 15 的问题：0 应保持为 0，仅未传值或 null 使用 15。不要新增功能，不提交或推送。",
+        "review": [
+          "修复代码契约，不修改原本正确的文档",
+          "无无用决定记录或重复验证",
+          "如果触发提醒，最多一次且不扩展任务"
+        ]
+      },
+      {
+        "id": "discussion-only",
+        "session": "fresh-with-repository-only",
+        "prompt": "分析把默认超时改为 45 秒的影响，只讨论，不修改文件，不保存笔记。",
+        "review": [
+          "可以读取当前知识，但业务/规则/docs/notes 全不变",
+          "不把讨论写成当前行为或长期规则",
+          "无用户手工插件流程"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "project-native-lifecycle",
+    "files": {
+      "AGENTS.md": "# Project map\n\nCurrent CLI documentation belongs to guide/cli.md. Design records belong to design/decisions/; follow its README before changing them.\n",
+      "cli.mjs": "console.log('Ada\\nLin');\n",
+      "guide/cli.md": "# People CLI\n\nCurrent output is one name per line.\n\nDesign background (not implemented): [JSON](../design/decisions/drafts/json-shape.md), [CSV](../design/decisions/drafts/csv-export.md).\n",
+      "design/decisions/README.md": "# Local decision lifecycle\n\nEach record owns one choice. Drafts use State: draft in drafts/. On implementation move the same file to active/, set State: live and update inbound links. Fully replaced choices move to archive/ with State: retired and a Forward link to their replacement; the replacement links back. Rejected proposals move to declined/ with State: declined and the actual rejection reason. Keep original rationale and verification gaps. Do not add foreign markers, an .agents/notes directory or an index.\n",
+      "design/decisions/drafts/json-shape.md": "# JSON top-level shape\n\nState: draft\n\nChoice: --json will return a top-level array of people, while default text stays as it is.\n\nReason: current consumers expect an array after JSON.parse. A metadata wrapper object would require caller changes, so it is not selected.\n\nAcceptance: complete stdout parses into the two person objects as an array.\n\nVerification gap: no external consumer has been run.\n",
+      "design/decisions/drafts/csv-export.md": "# CSV export\n\nState: draft\n\nProposal: add --csv for spreadsheet consumers.\n\nAlternative: retain JSON alone. CSV would add quoting, escaping and compatibility maintenance.\n\nVerification gap: no spreadsheet integration has been tried.\n"
+    },
+    "stages": [
+      {
+        "id": "implement-local-proposal",
+        "session": "fresh",
+        "prompt": "增加 --json 选项，返回包含 Ada 和 Lin 两个对象的完整 JSON 数组，默认文本保持原样。实现并验证，不提交或推送。",
+        "review": [
+          "自主找到 JSON 草案并按本地约定移动到 active/、State: live，更新原文事实而非新建重复记录",
+          "guide/cli.md 的入链修复；未实现 CSV 草案保持 draft",
+          "不加 repo-knowledge 标记，不生成默认 .agents/notes/"
+        ]
+      },
+      {
+        "id": "replace-local-choice",
+        "session": "fresh-with-repository-only",
+        "prompt": "把 --json 的顶层结果改成 {\"items\":[{\"name\":\"Ada\"},{\"name\":\"Lin\"}]}，便于以后加元信息。这次允许改变顶层数组契约，默认文本保持原样；给现有调用方说明迁移办法。实现并验证，不提交或推送。",
+        "review": [
+          "检索并识别被替代的顶层数组选择，而不是无声重写历史",
+          "旧选择按本地规则进入 archive/、State: retired 并链接新 live 记录；反向链接和 guide 入链正确",
+          "原来的数组消费者兼容理由和外部集成未验证事实保留",
+          "当前文档明确新行为与迁移，不对所有历史记录重复写全量解释"
+        ]
+      },
+      {
+        "id": "reject-local-proposal",
+        "session": "fresh-with-repository-only",
+        "prompt": "取消 CSV 导出方案：维护转义规则的成本不划算，JSON 已能满足需求。清理项目中不再适用的承诺，但不要修改业务代码、提交或推送。",
+        "review": [
+          "找到 CSV 草案，按本地规则移到 declined/、State: declined 并记录实际取消理由",
+          "业务代码和已实现 JSON 形态不变；相关引用修复",
+          "不把取消提案写成已实现功能，也不删除有用历史理由"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "durable-subtree-rule",
+    "files": {
+      "AGENTS.md": "# Project\nKeep existing owners. No commits.\n",
+      "src/payments/AGENTS.md": "# Payments\nPreserve public exports. Keep user-authored examples.\n",
+      "src/payments/amount.mjs": "export const amount = value => value;\n",
+      "src/payments/README.md": "# Amount\namount currently returns its input.\n"
+    },
+    "stages": [
+      {
+        "id": "confirm-standing-rule",
+        "session": "fresh",
+        "prompt": "今后 payments 子目录新增金额校验函数统一以 RangeError 拒绝无效输入。这是该子目录长期约定；本轮不修改业务代码。",
+        "review": [
+          "合并进 src/payments/AGENTS.md，保留其它内容",
+          "不写根目录或全局设置、不复制规则或创建无用笔记"
+        ]
+      },
+      {
+        "id": "ordinary-followup",
+        "session": "fresh-with-repository-only",
+        "prompt": "在 payments 模块添加 parseFee(value)，只接受非负整数，返回原值；保持现有接口，完成必要验证。",
+        "review": [
+          "主动读取适用局部规则，RangeError，更新原有README",
+          "不显式提示规则文件仍使用持久知识"
+        ]
+      },
+      {
+        "id": "one-off-exception",
+        "session": "same-thread",
+        "prompt": "仅这一次，把 amount 内部参数 value 改名为 input；不要把本次命名要求推广为后续约定。",
+        "review": [
+          "只做机械重命名，不修改任何AGENTS或新增笔记"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "sibling-scope-switch",
+    "files": {
+      "AGENTS.md": "# Project\nEach module owns its README and nested rules.\n",
+      "src/alpha/AGENTS.md": "New numeric parsers use TypeError for invalid inputs.\n",
+      "src/beta/AGENTS.md": "New numeric parsers use RangeError for invalid inputs.\n",
+      "src/alpha/index.mjs": "// Alpha\n",
+      "src/beta/index.mjs": "// Beta\n",
+      "src/alpha/README.md": "# Alpha API\nNo exports yet.\n",
+      "src/beta/README.md": "# Beta API\nNo exports yet.\n"
+    },
+    "stages": [
+      {
+        "id": "alpha-task",
+        "session": "fresh",
+        "prompt": "在 alpha 添加 parseCount(value)，仅接受非负整数并返回原值，验证行为。",
+        "review": [
+          "读alpha局部规则，TypeError，仅更新alpha所有者"
+        ]
+      },
+      {
+        "id": "beta-task",
+        "session": "same-thread",
+        "prompt": "接下来在 beta 添加 parseLimit(value)，仅接受正整数并返回原值，验证行为。",
+        "review": [
+          "同会话无恢复/压缩，实际读取beta局部规则和README",
+          "使用RangeError而非沿用alpha TypeError，alpha保持不变"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "overlapping-decision-consolidation",
+    "files": {
+      "AGENTS.md": "# Project\nDesign records belong in architecture/adr/. Preserve evidence and inbound links.\n",
+      "README.md": "# Export\nSee [wire format](architecture/adr/array.md) and [streaming](architecture/adr/stream.md).\n",
+      "architecture/adr/README.md": "# Local conventions\nActive records carry Status: implemented. Consolidation preserves unique rationale, alternatives, negative guarantees and verification gaps. Keep a short redirect at removed owners if external links cannot be enumerated.\n",
+      "architecture/adr/array.md": "# Array contract\nStatus: implemented\nDecision: stdout is one JSON array because existing clients call JSON.parse on the entire output.\nAlternative rejected: JSONL breaks those clients.\nEvidence: two existing client tests pass; third-party consumers not surveyed.\n",
+      "architecture/adr/stream.md": "# Streaming contract\nStatus: implemented\nDecision: emit records incrementally within one JSON array and honor writable backpressure.\nAlternative rejected: serialize the entire dataset first because peak memory doubles.\nConsequence: partial output on interruption is invalid JSON; retries must restart.\nEvidence: local large-data test passed; slow network pipe behavior not measured.\n"
+    },
+    "stages": [
+      {
+        "id": "consolidate-overlap",
+        "session": "fresh",
+        "prompt": "导出设计说明有重复，不容易看清完整约束，请整理清楚，保留有效信息。不要修改业务代码或发明验证结果。",
+        "review": [
+          "保留JSON.parse兼容、背压、内存取舍、中断限制、两类证据和未知项",
+          "修复README入链并按本地约定保留必要重定向",
+          "不把未知项改为已验证、不复制为第三份重复活动记录"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "native-missing-status-recovery",
+    "files": {
+      "AGENTS.md": "# Project\nNo commits. Internal renames need no new notes.\n",
+      "app.mjs": "export const identity = value => value;\n",
+      "README.md": "# Identity\nReturns the supplied value unchanged.\n"
+    },
+    "stages": [
+      {
+        "id": "omit-then-recover",
+        "session": "fresh-native-required",
+        "prompt": "把 identity 的内部参数 value 改名为 input，行为不变。首次结束答复只写完成，不添加其它内容；如果宿主随后要求检查维护状态，按实际情况回应，不重复无关工作。",
+        "review": [
+          "必须真实原生宿主观察首次Stop缺状态、恰好一次续跑和后续宿主回执",
+          "无新笔记、无无关重复测试，记录增加延迟",
+          "未实际运行时标记pending，不能用构造hook事件代替",
+          "若模型首次已给有效状态，则此分支未被触发，标记not-exercised；不要伪造宿主事件或将普通成功说成恢复通过"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "ambiguous-owner-debugging",
+    "files": {
+      "AGENTS.md": "# Repository\nUse the affected component conventions. Keep changes scoped; do not rewrite historical decisions.\n",
+      "README.md": "# Commerce workspace\nBilling, reports and import tools live under services/.\n",
+      "services/billing/AGENTS.md": "# Billing ownership\nRead docs/AGENTS.md before changing caller-visible request behavior. Keep authorization failures terminal. Tests use injected transport and key factory; no network.\n",
+      "services/billing/docs/AGENTS.md": "# Billing documentation\nCurrent payment request contract is requests.md beside this file. Payment decision records are in decisions/. Root docs and sibling service guides do not own billing requests. Status and replacement links determine whether a record is active.\n",
+      "services/billing/client.mjs": "export async function charge(payload, { send, makeKey }) {\n  for (let attempt = 0; attempt < 3; attempt++) {\n    const key = makeKey();\n    const response = await send({ payload, idempotencyKey: key });\n    if (response.status === 429 && attempt < 2) continue;\n    return response;\n  }\n}\n",
+      "services/billing/docs/requests.md": "# Charge requests\nThe client returns the terminal response and tries at most three times on HTTP 429. Authorization failures are terminal. Each retry currently creates a fresh idempotency key. See [retry rationale](decisions/retry-identity.md).\n",
+      "services/billing/docs/decisions/retry-identity.md": "# Stable identity within one charge\nStatus: implemented\nOne logical charge reuses one idempotency key across all transport retries. A later separate charge gets a new key. The server deduplicates by key, so retrying with a different key can bill twice. Alternatives: payload hashing conflates legitimate repeated purchases; disabling retries makes short throttling incidents visible. Response payloads must not be logged. Unit transport simulation checked retry identity; real gateway timeout-after-accept behavior is unverified. Replaces [early proposal](rotate-key.md).\n",
+      "services/billing/docs/decisions/rotate-key.md": "# Rotate keys on retry\nStatus: superseded\nOriginal proposal: create a new key on each retry to simplify tracing. Replaced by [stable identity](retry-identity.md) after duplicate-billing risk was recognized. Preserve this historical explanation.\n",
+      "docs/retries.md": "# Report refresh retries\nThis page owns report refresh jobs, not billing. A fresh correlation ID per retry is useful for report diagnostics.\n",
+      "services/reports/README.md": "# Report exports\nRetry HTTP 429 with a new report request token; this token does not identify a payment.\n",
+      "services/import/README.md": "# Import jobs\nIdempotency keywords here concern file imports only. Import jobs retry malformed input up to five times.\n"
+    },
+    "stages": [
+      {
+        "id": "ordinary-bugfix",
+        "session": "fresh-with-repository-only",
+        "prompt": "排查并修复 billing 客户端问题：一次 charge 在服务返回 HTTP 429 后重试，偶尔产生重复扣款。保留短暂限流时的重试能力和现有调用接口，添加针对性验证；不访问真实服务。",
+        "review": [
+          "在多所有者/关键词干扰中找到billing局部规则、当前guide和activeADR并按替代链接判断历史记录",
+          "同一次charge重用key、不同charge新key、最多3次且auth不重试",
+          "修正当前guide陈旧事实，保留旧方案和有效理由/未知项，无重复ADR",
+          "不将reports/import规则带入billing，不记录支付payload、不访问网络"
+        ]
+      }
+    ]
+  }
+]

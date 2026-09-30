@@ -3,26 +3,32 @@ import path from 'node:path';
 import os from 'node:os';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { fixtureGitEnvironment, fixtureGitArguments } from '../scripts/lib/fixture-git.mjs';
 export const plugin = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-export function fixture(t, { dirty = false } = {}) {
+export function directoryFixture(t) {
   const home = fs.realpathSync.native(fs.mkdtempSync(path.join(os.tmpdir(), 'rk-test-')));
   const repo = path.join(home, 'repo with spaces');
   const data = path.join(home, 'plugin-data');
   fs.mkdirSync(repo); fs.mkdirSync(data);
+  fs.writeFileSync(path.join(repo, 'app.js'), 'export const value = 1;\n');
+  t.after(() => fs.rmSync(home, { recursive: true, force: true }));
+  const event = (name, extra = {}) => ({ hook_event_name: name, session_id: 'session-one', turn_id: 'turn-one', cwd: repo, permission_mode: 'default', ...(name === 'Stop' ? { last_assistant_message: 'Done.' } : {}), ...extra });
+  const env = { ...process.env, PLUGIN_ROOT: plugin, PLUGIN_DATA: data };
+  const write = (name, value) => { fs.mkdirSync(path.dirname(path.join(repo, name)), { recursive: true }); fs.writeFileSync(path.join(repo, name), value); };
+  return { home, repo, data, event, env, write };
+}
+// Only snapshot/lifecycle tests need a committed Git baseline.
+export function fixture(t, { dirty = false } = {}) {
+  const f = directoryFixture(t);
   const git = (...args) => {
-    const r = spawnSync('git', ['-c', 'core.hooksPath='+path.join(home,'disabled-hooks'), '-c', 'commit.gpgSign=false', '-c', 'core.fsmonitor=false', '-C', repo, ...args], { encoding: 'utf8', timeout: 5000 });
+    const r = spawnSync('git', fixtureGitArguments(f.repo, args), { cwd: f.repo, env: fixtureGitEnvironment(f.repo), encoding: 'utf8', timeout: 5000 });
     if (r.status !== 0) throw new Error(r.stderr);
     return r.stdout;
   };
   git('init', '-q'); git('config', 'user.name', 'Local test'); git('config', 'user.email', 'test@example.invalid');
-  fs.writeFileSync(path.join(repo, 'app.js'), 'export const value = 1;\n');
   git('add', '.'); git('commit', '-qm', 'fixture');
-  if (dirty) fs.writeFileSync(path.join(repo, 'app.js'), 'export const value = 2;\n');
-  t.after(() => fs.rmSync(home, { recursive: true, force: true }));
-  const event = (name, extra = {}) => ({ hook_event_name: name, session_id: 'session-one', turn_id: 'turn-one', cwd: repo, permission_mode: 'default', ...extra });
-  const env = { ...process.env, PLUGIN_ROOT: plugin, PLUGIN_DATA: data };
-  const write = (name, value) => { fs.mkdirSync(path.dirname(path.join(repo, name)), { recursive: true }); fs.writeFileSync(path.join(repo, name), value); };
-  return { home, repo, data, git, event, env, write };
+  if (dirty) f.write('app.js', 'export const value = 2;\n');
+  return { ...f, git };
 }
 export function hookProcess(f, event, env = {}) {
   const hooks = JSON.parse(fs.readFileSync(path.join(plugin, 'hooks/hooks.json'), 'utf8'));

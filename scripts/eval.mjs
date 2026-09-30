@@ -5,12 +5,13 @@ import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
 import { hash, checkedPath } from './lib/io.mjs';
+import { fixtureGitEnvironment, fixtureGitArguments } from './lib/fixture-git.mjs';
 const ROOT=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 export const CASES=JSON.parse(fs.readFileSync(path.join(ROOT,'evals/cases.json'),'utf8'));
 function exec(exe,args,cwd) {
-  const env={...process.env,GIT_CONFIG_NOSYSTEM:'1',GIT_CONFIG_GLOBAL:path.join(cwd,'.git','missing-global-config'),GIT_TERMINAL_PROMPT:'0'};
-  for (const k of ['GIT_DIR','GIT_WORK_TREE','GIT_INDEX_FILE']) delete env[k];
-  const r=spawnSync(exe,args,{cwd,env,encoding:'utf8',timeout:10000,maxBuffer:1048576,windowsHide:true});
+  const env=fixtureGitEnvironment(cwd);
+  const commandArgs=exe==='git'?fixtureGitArguments(cwd,args):args;
+  const r=spawnSync(exe,commandArgs,{cwd,env,encoding:'utf8',timeout:10000,maxBuffer:1048576,windowsHide:true});
   if (r.error || r.status!==0) throw new Error(`${exe} failed: ${r.error?.message||r.stderr||r.status}`);
   return r.stdout;
 }
@@ -47,6 +48,28 @@ export function prepare(out) {
   fs.writeFileSync(path.join(out,'PROMPTS.md'),'# Ordinary prompts; do not mention docs/notes or skill names\n\n'+CASES.map(c=>`## ${c.id}\n\n${c.prompt}\n`).join('\n')+'\n');
   return {status:'prepared',cases:CASES.length,out,modelInvocations:0,nativeHookValidated:false};
 }
+// Prepared multi-task scenarios only. The controller, not the model, reads rubrics.
+export const CONTINUITY_CASES = JSON.parse(fs.readFileSync(path.join(ROOT, 'evals/continuity-cases.json'), 'utf8'));
+export function prepareContinuity(out) {
+  out = path.resolve(out);
+  checkedPath(path.parse(out).root, path.relative(path.parse(out).root, out));
+  if (fs.existsSync(out)) throw new Error('Refusing to overwrite an existing evaluation directory');
+  fs.mkdirSync(out, { recursive: true });
+  const manifest = { version: 1, mode: 'continuity-prepared-only', created: new Date().toISOString(), cases: [] };
+  for (const item of CONTINUITY_CASES) {
+    const repo = path.join(out, item.id); fs.mkdirSync(repo);
+    for (const [rel, text] of Object.entries(item.files)) {
+      const file = checkedPath(repo, rel); fs.mkdirSync(path.dirname(file), { recursive: true }); fs.writeFileSync(file, text);
+    }
+    exec('git', ['init', '-q'], repo);
+    exec('git', ['add', '.'], repo);
+    exec('git', ['-c', 'user.name=Evaluation fixture', '-c', 'user.email=fixture@example.invalid', '-c', 'core.hooksPath='+path.join(repo, '.git', 'disabled-hooks'), '-c', 'commit.gpgSign=false', 'commit', '-qm', 'Isolated continuity baseline'], repo);
+    manifest.cases.push({ id: item.id, baseline: inventory(repo), head: exec('git', ['rev-parse', 'HEAD'], repo).trim(), stages: item.stages });
+  }
+  fs.writeFileSync(path.join(out, 'manifest.json'), JSON.stringify(manifest, null, 2)+'\n');
+  fs.writeFileSync(path.join(out, 'CONTINUITY.md'), '# Multi-task acceptance: controller instructions\n\nUse each repository through all of its stages in order. Feed the model only the stage prompt, never the rubric. Start/resume/compact as specified. Before each stage record a project inventory outside that repository. Apply any before.replaceFiles changes while the model is idle, as test-controller actions. Then genuinely resume the session or invoke native compaction as the stage specifies, observe its lifecycle event, and only then send the ordinary prompt. Capture the native hook and relevant file-read events; a final answer or receipt is not evidence of retrieval. Compare each stage with its own starting inventory, distinguishing controller edits from model edits. Do not commit model changes. This file prepares scenarios only and reports no model acceptance.\n');
+  return { status: 'prepared', cases: CONTINUITY_CASES.length, stages: CONTINUITY_CASES.reduce((n, item) => n + item.stages.length, 0), out, modelInvocations: 0, nativeHookValidated: false, semanticAcceptance: 'not-run' };
+}
 export function grade(out) {
   out=path.resolve(out);
   const manifest=JSON.parse(fs.readFileSync(path.join(out,'manifest.json'),'utf8'));
@@ -66,19 +89,20 @@ export function grade(out) {
     const notePaths=Object.keys(now).filter(p=>p.startsWith('.agents/notes/'));
     const oldNotes=Object.keys(entry.baseline).filter(p=>p.startsWith('.agents/notes/'));
     const notesChanged=notePaths.some(p=>now[p]!==entry.baseline[p])||oldNotes.some(p=>!(p in now));
-    checks.push({name:'decision-file-policy-only',passed:c.notes==='none'?notePaths.length===0:c.notes==='new'?notePaths.length>0:notesChanged});
+    if(c.notes==='review') checks.push({name:'durable-rationale-owner',passed:null,status:'manual-review',note:'Review the actual owning README/ADR/note; no mandatory new file.'});
+    else checks.push({name:'decision-file-policy-only',passed:c.notes==='none'?notePaths.length===0:c.notes==='new'?notePaths.length>0:notesChanged});
     checks.push({name:'no-unauthorized-commit',passed:exec('git',['rev-parse','HEAD'],repo).trim()===entry.head});
     if(c.id==='discussion-only') checks.push({name:'all-files-unchanged',passed:JSON.stringify(Object.entries(now).sort())===JSON.stringify(Object.entries(entry.baseline).sort())});
     if(c.id==='mechanical-rename') checks.push({name:'requested-rename',passed:/\btotal\b/.test(fs.readFileSync(path.join(repo,'app.mjs'),'utf8'))&&!/\bresult\b/.test(fs.readFileSync(path.join(repo,'app.mjs'),'utf8'))});
-    results.push({id:c.id,objectiveStatus:checks.every(x=>x.passed)?'passed':'failed',checks,semanticReview:'pending',reviewFocus:c.focus});
+    results.push({id:c.id,objectiveStatus:checks.filter(x=>x.passed!==null).every(x=>x.passed)?'passed':'failed',checks,semanticReview:'pending',reviewFocus:c.focus});
   }
   return {scope:'objective checks only; file changes do not prove semantic quality or hook delivery',objectiveStatus:results.every(x=>x.objectiveStatus==='passed')?'passed':'failed',semanticStatus:'pending',nativeHookDelivery:'must be observed in the client',modelBehaviorValidated:false,results};
 }
 if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.url)) {
   try {
     const {values,positionals}=parseArgs({allowPositionals:true,options:{out:{type:'string'}}});
-    if(!values.out||!['prepare','grade'].includes(positionals[0])||positionals.length!==1) throw new Error('Usage: node scripts/eval.mjs prepare|grade --out /new/absolute/fixture-directory');
-    const report=positionals[0]==='prepare'?prepare(values.out):grade(values.out);
+    if(!values.out||!['prepare','grade','prepare-continuity'].includes(positionals[0])||positionals.length!==1) throw new Error('Usage: node scripts/eval.mjs prepare|grade|prepare-continuity --out /new/absolute/fixture-directory');
+    const report=positionals[0]==='prepare'?prepare(values.out):positionals[0]==='prepare-continuity'?prepareContinuity(values.out):grade(values.out);
     console.log(JSON.stringify(report,null,2));if(report.objectiveStatus==='failed')process.exitCode=1;
   } catch(e) {console.error(e.message);process.exitCode=1;}
 }

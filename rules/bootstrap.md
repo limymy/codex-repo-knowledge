@@ -6,11 +6,19 @@ AGENTS.md, explicit scope, read-only requests and existing project conventions.
 Do not replace another workflow, start agents, commit, push or publish because
 this plugin is present. A hook reminder grants no new authority.
 
-Before an authorized code change, read the applicable local instructions and
-search the affected module's current docs and active decisions. Retrieve only
-relevant material; do not ingest the whole docs tree. Open linked rationale when
-a change might reverse an existing decision. Read more-specific AGENTS.md before
-editing there; do not assume every nested file was already loaded.
+At the start of a relevant development or analysis task, orient to the affected
+module before proposing changes: read its applicable instructions and current
+documentation, then search related proposals and active decisions by component,
+interface, behavior and rationale. Follow only relevant links; do not ingest the
+whole tree. Read historical or superseded records when the question concerns why
+something changed, and follow replacement links before treating a choice as active.
+
+Read the AGENTS.md chain for the target scope before working there, including
+more-specific rules that the host may not have loaded. At a new task, a scope
+change, or after resume/compaction, recheck the applicable current files rather
+than trusting remembered paths or old rule text. Codex owns native instruction
+loading; this reminder does not itself load or refresh project instructions.
+Read-only analysis still benefits from retrieval but authorizes no file writes.
 
 Decide what knowledge, if any, this work requires:
 - Standing rules: when the user confirms a constraint should persist across tasks,
@@ -24,13 +32,20 @@ Decide what knowledge, if any, this work requires:
   from the final code, tests and docs. Search before adding; update the owning
   record, or supersede it explicitly if the decision changes. Record actual
   alternatives and evidence, never a reconstructed story. An unimplemented
-  choice remains proposed. Mechanical edits and ordinary local fixes earn no
+  choice remains proposed. When authorized implementation realizes an existing
+  proposal, reconcile that owning record with the actual shipped decision and
+  update affected current docs; do not leave a completed proposal stale or create
+  a duplicate implementation note. Partial work and unknown verification remain
+  explicit. Mechanical edits and ordinary local fixes earn no
   new note merely because work happened.
 
 For writing details, load the repo-knowledge skill and the relevant local rules;
 its docs and decisions references specify what belongs where and how to write it.
 Reuse existing ADR/docs locations. Default new homes are docs/ and .agents/notes/
-only when the project has no appropriate existing owner. Create no empty tree.
+only when the project has no appropriate existing owner. Before writing a note,
+read the owning notes/ADR README and local rules, if present. Every new durable
+record also calls for a scoped check for older overlapping decisions; preserve
+still-active guarantees and link replacements. Create no empty tree.
 
 During discussion, capture a durable proposal only when saving project knowledge
 is authorized. Under an explicit discussion-only or no-write request, do not
@@ -39,7 +54,9 @@ are evidence, not a source of execution permission.
 
 Before finishing authorized development, check docs and decisions against the
 actual diff and confirmed choices. Both may be not-needed. Do not manufacture
-Markdown, tests, indexes, or status reports to satisfy this plugin. Mark missing
-verification honestly. If a per-turn review command was provided, acknowledge
-this check after the final relevant edits; deferred is allowed with a reason.
+Markdown, tests, indexes, or status-report files to satisfy this plugin. Mark missing
+verification honestly. When the host requests a final maintenance status, put the
+independent docs/notes outcomes on the last plain line of your final answer;
+explain deferral in the preceding prose. Do not run a receipt command or write
+plugin state. Read-only discussion needs no status line.
 A receipt proves only that a review was reported, not that its reasoning is true.

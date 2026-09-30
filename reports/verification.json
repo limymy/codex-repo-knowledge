@@ -1,5 +1,5 @@
 {
-  "version": "0.1.0-alpha.2+codex.20260930014724",
+  "version": "0.1.0-alpha.2+codex.20260930145548",
   "date": "2026-09-30",
   "environment": {
     "os": "Linux x86_64",
@@ -8,10 +8,11 @@
   },
   "offline": {
     "command": "npm run verify",
-    "tests": 101,
-    "passed": 101,
+    "tests": 123,
+    "passed": 123,
     "failed": 0,
-    "skipped": 0
+    "skipped": 0,
+    "finalAggregateAfterLastParserEdit": true
   },
   "officialCompatibilityManifestValidation": "passed",
   "mutations": [
@@ -49,76 +50,6 @@
   "nativeManagement": {
     "scope": "native CLI marketplace management and installed skill/hook discovery in isolated HOME/CODEX_HOME; no model or hook execution",
     "status": "passed",
-    "commands": [
-      {
-        "args": [
-          "--version"
-        ],
-        "status": 0,
-        "error": null,
-        "stdout": "codex-cli 0.159.0-alpha.7\n",
-        "stderr": ""
-      },
-      {
-        "args": [
-          "plugin",
-          "marketplace",
-          "add",
-          "<plugin-root>"
-        ],
-        "status": 0,
-        "error": null,
-        "stdout": "Added marketplace `codex-repo-knowledge` from <plugin-root>.\nInstalled marketplace root: <plugin-root>\n",
-        "stderr": ""
-      },
-      {
-        "args": [
-          "plugin",
-          "marketplace",
-          "list"
-        ],
-        "status": 0,
-        "error": null,
-        "stdout": "MARKETPLACE           ROOT\ncodex-repo-knowledge  <plugin-root>\n",
-        "stderr": ""
-      },
-      {
-        "args": [
-          "plugin",
-          "add",
-          "repo-knowledge@codex-repo-knowledge",
-          "--json"
-        ],
-        "status": 0,
-        "error": null,
-        "stdout": "{\n  \"pluginId\": \"repo-knowledge@codex-repo-knowledge\",\n  \"name\": \"repo-knowledge\",\n  \"marketplaceName\": \"codex-repo-knowledge\",\n  \"version\": \"0.1.0-alpha.2+codex.20260930014724\",\n  \"installedPath\": \"<isolated-home>/codex/plugins/cache/codex-repo-knowledge/repo-knowledge/0.1.0-alpha.2+codex.20260930014724\",\n  \"authPolicy\": \"ON_INSTALL\"\n}\n",
-        "stderr": ""
-      },
-      {
-        "args": [
-          "plugin",
-          "list",
-          "--marketplace",
-          "codex-repo-knowledge",
-          "--json"
-        ],
-        "status": 0,
-        "error": null,
-        "stdout": "{\n  \"installed\": [\n    {\n      \"pluginId\": \"repo-knowledge@codex-repo-knowledge\",\n      \"name\": \"repo-knowledge\",\n      \"marketplaceName\": \"codex-repo-knowledge\",\n      \"version\": \"0.1.0-alpha.2+codex.20260930014724\",\n      \"installed\": true,\n      \"enabled\": true,\n      \"source\": {\n        \"source\": \"local\",\n        \"path\": \"<plugin-root>\"\n      },\n      \"marketplaceSource\": {\n        \"sourceType\": \"local\",\n        \"source\": \"<plugin-root>\"\n      },\n      \"installPolicy\": \"AVAILABLE\",\n      \"authPolicy\": \"ON_INSTALL\"\n    }\n  ],\n  \"available\": []\n}\n",
-        "stderr": ""
-      },
-      {
-        "args": [
-          "plugin",
-          "remove",
-          "repo-knowledge@codex-repo-knowledge"
-        ],
-        "status": 0,
-        "error": null,
-        "stdout": "Removed plugin `repo-knowledge` from marketplace `codex-repo-knowledge`.\n",
-        "stderr": ""
-      }
-    ],
     "modelBehavior": "not-run",
     "installedSkillDiscovery": "passed",
     "nativeHookExecution": "not-run",
@@ -157,12 +88,21 @@
     ],
     "reason": "Native management and installed skill/hook discovery passed; hooks remain untrusted, execution and model behavior are not tested"
   },
-  "nativeHookDelivery": "not-run",
+  "nativeHookDelivery": "passed: startup/resume/compact, UserPromptSubmit and Stop; native host notifications plus bounded diagnostics",
   "modelBehavior": {
-    "status": "blocked-before-model-request",
-    "reason": "Existing authenticated profile cannot initialize an ephemeral CLI app-server on this read-only filesystem; isolated profile is not authenticated. No credentials copied and no trust bypass used."
+    "status": "controller-reported-5-groups-15-stages-behavior-checked",
+    "observedThroughUTC": "2026-09-30T04:00:00Z",
+    "source": "Controller summary; original desktop records not directly inspected here",
+    "nativeLifecycle": "not-tested; owners/minimal used same-thread continuation",
+    "causalImprovement": "not-established; no uninstalled control",
+    "candidateUnderBehaviorTest": "0.1.0-alpha.2+codex.20260930020841"
   },
-  "remoteCI": "pending-after-sync",
+  "remoteCI": {
+    "currentLocalCandidate": "consult exact published commit checks; not presumed passed at packaging",
+    "previousPublishedCommit": "552cc19507332960a17c15893f96730ba1600090",
+    "url": "https://github.com/limymy/codex-repo-knowledge/actions/runs/36656849100",
+    "observedJobs": "Linux/Windows and native discovery passed; macOS failed an error-message assertion corrected locally."
+  },
   "unchangedFixtureNegativeControl": [
     {
       "case": "documented-default",
@@ -188,5 +128,281 @@
       "case": "restore-contract",
       "status": "failed"
     }
-  ]
+  ],
+  "localFunctionalDevelopment": {
+    "status": "tested-scenarios-pass; explicit-evidence-gaps-retained",
+    "continuityCases": 10,
+    "continuityStages": 23,
+    "preparedOnly": false,
+    "publication": "authorized; verify GitHub commit and checks"
+  },
+  "diagnostics": {
+    "status": "native-isolated-profile-verified",
+    "defaultEnabled": false,
+    "nativeExecution": "passed",
+    "retention": 128,
+    "readBudgetBytes": 32768,
+    "tests": 5,
+    "independentReview": "No privacy/path-safety blocker; evidence wording corrected to distinguish instrumentation reached from runtime result computed"
+  },
+  "nativePartialTrial": {
+    "candidateVersion": "0.1.0-alpha.2+codex.20260930071342",
+    "atUTC": "2026-09-30T08:00:42Z",
+    "tinyResponsesProbe": "passed",
+    "firstTask": "failed-before-project-edits",
+    "reportedBackendBlock": "generic-api-key",
+    "instrumentedEvents": [
+      "SessionStart",
+      "UserPromptSubmit"
+    ],
+    "modelConsumption": "not-established",
+    "stopResumeCompact": "not-established"
+  },
+  "turnStateInterface": {
+    "option": "--turn-state-id",
+    "legacyAlias": "--key",
+    "identifierBytesChanged": false,
+    "oldSyntheticRuleMatchReproduced": true,
+    "actualBackendMatchConfirmed": false,
+    "providerRetry": "not-run"
+  },
+  "nativeThreeStageTrial": {
+    "candidateVersion": "0.1.0-alpha.2+codex.20260930080940",
+    "observedThroughUTC": "2026-09-30T08:37:51Z",
+    "minimalNativeReply": "passed; no tool actions or project changes",
+    "freshStagesCompleted": 3,
+    "skillAndOwningReadmeReads": "observed in sanitized tool events",
+    "readOnlyStageProjectChanged": false,
+    "hooksObserved": [
+      "SessionStart startup",
+      "UserPromptSubmit",
+      "Stop"
+    ],
+    "legacyReceipt": "failed: model sandbox EROFS",
+    "remindersPerChangedStage": [
+      1,
+      1
+    ],
+    "extraContinuationSecondsApprox": [
+      47,
+      93
+    ],
+    "fullAcceptance": "not-passed"
+  },
+  "finalStatusProtocol": {
+    "status": "current-candidate-native-normal-path-passed; missing-status-recovery-not-exercised",
+    "writer": "host Stop hook",
+    "input": "last_assistant_message final plain line",
+    "maxInputBytes": 16384,
+    "acceptedMessageHashesPerTurn": 8,
+    "storedAnswerText": false,
+    "modelPluginDataWriteRequired": false,
+    "providerRetry": "current-candidate-user-started-run-reviewed",
+    "focusedTests": 19,
+    "nativeProfileInstalled": true
+  },
+  "nativeLifecycleAcceptance": {
+    "candidateVersion": "0.1.0-alpha.2+codex.20260930085129",
+    "date": "2026-09-30",
+    "cli": "0.159.0-alpha.7",
+    "model": "glm-5.3-flash",
+    "minimalReply": "passed; zero tool actions or project changes",
+    "modelTurnsCompleted": 4,
+    "serverRestartResume": "passed",
+    "nativeCompaction": "completed contextCompaction item and turn",
+    "sessionStartSources": [
+      "startup",
+      "resume",
+      "compact"
+    ],
+    "hostCompletedHooks": {
+      "SessionStart": 3,
+      "UserPromptSubmit": 4,
+      "Stop": 4
+    },
+    "changedTurnReceipts": {
+      "count": 3,
+      "source": "stop-final-status",
+      "docs": "updated",
+      "notes": "not-needed",
+      "digestPresent": true,
+      "reminders": 0
+    },
+    "legacyReceiptCalls": 0,
+    "EROFSObserved": false,
+    "readOnlyInventoryEntries": 25,
+    "readOnlyChanged": false,
+    "readOnlyReceiptRecorded": false,
+    "semanticReview": "passed: scoped rule rereads, prior API preservation, existing handbook updated, no unnecessary notes",
+    "causalImprovement": "not-established; no uninstalled control",
+    "modelDiversity": "earlier controller environment differs; exact earlier model version unverified"
+  },
+  "postNativeReplayPatch": {
+    "nativeRerun": true,
+    "independentReview": "passed",
+    "completeSnapshotObservedHashes": "includes baseline-equal and already-reviewed paths",
+    "regressionsAdded": 2,
+    "nativeRerunScope": "normal four-stage path only; specific replay sequences remain deterministic-test evidence"
+  },
+  "semanticSupplement": {
+    "date": "2026-09-30",
+    "cases": 4,
+    "stages": 7,
+    "status": "artifact-and-behavior-checks-passed",
+    "guidance": "actual skill explicitly supplied; no evaluator rubric",
+    "readOrderEvidence": "worker-reported; not independent tool trace",
+    "independentArtifactReview": "passed including parser behavior and consolidation links/evidence preservation",
+    "implicitSkillDiscovery": "not-tested by supplement",
+    "nativeCommandHooks": "not-tested by supplement",
+    "nativeMissingStatusRecovery": "two attempts: timeout before observed Stop; fresh short turn supplied valid status immediately",
+    "largeRepositoryNavigation": "not-tested",
+    "navigationDebugging": {
+      "status": "independent-artifact-and-behavior-review-passed",
+      "rootDirectOwnerMap": false,
+      "conflictingSupersededRecord": true,
+      "staleCurrentGuide": true,
+      "unrelatedKeywordMatches": true,
+      "mockTransportTests": 6,
+      "historicalRecordsChanged": false,
+      "productionGatewayValidated": false,
+      "baselineRegressionComparison": "baseline 3 keys/3 simulated payments/429; fixed 1 key/1 simulated payment/200"
+    }
+  },
+  "currentCandidateNativeReview": {
+    "candidateVersion": "0.1.0-alpha.2+codex.20260930094728",
+    "date": "2026-09-30",
+    "cli": "0.159.0-alpha.7",
+    "model": "glm-5.3-flash",
+    "sourceAndInstalledChecksumsMatched": 61,
+    "minimalReply": "passed",
+    "metadataFallbackWarnings": 1,
+    "overallFiveStageDriver": "blocked-timeout",
+    "firstFourStages": "completed and artifacts reviewed",
+    "nativeResume": true,
+    "nativeCompaction": true,
+    "hostCompletedHooks": {
+      "SessionStart": 3,
+      "UserPromptSubmit": 5,
+      "Stop": 4
+    },
+    "changedTurnReceipts": {
+      "count": 3,
+      "source": "stop-final-status",
+      "docs": "updated",
+      "notes": "not-needed",
+      "digestPresent": true,
+      "reminders": 0
+    },
+    "readOnlyInventoryEntries": 25,
+    "readOnlyChanged": false,
+    "readOnlyReceiptRecorded": false,
+    "missingStatusRecovery": {
+      "status": "unproven-timeout",
+      "timeoutSeconds": 600,
+      "observedStopEvents": 0,
+      "reminded": false,
+      "reviewRecorded": false,
+      "projectChanged": false,
+      "continuationSeconds": null,
+      "cause": "unknown"
+    },
+    "specificReplaySequenceNativeCoverage": false,
+    "causalImprovement": "not established; no uninstalled control"
+  },
+  "targetedRecoveryReview": {
+    "candidateVersion": "0.1.0-alpha.2+codex.20260930094728",
+    "date": "2026-09-30",
+    "driverStatus": "completed",
+    "modelTurnRequests": 1,
+    "durationSeconds": 105.69,
+    "onlyInternalParameterRename": true,
+    "inventoryEntries": 17,
+    "onlyChangedFile": "app.mjs",
+    "maintenanceFilesPreserved": true,
+    "sourceInstalledVerifiedFiles": 61,
+    "receipt": {
+      "source": "stop-final-status",
+      "docs": "not-needed",
+      "notes": "not-needed",
+      "digestPresent": true,
+      "reminded": false
+    },
+    "recoveryStatus": "not-exercised",
+    "reason": "valid-status-without-reminder",
+    "nativeReminderCount": 0,
+    "diagnosticReminderCount": 0,
+    "hostContinuationObserved": false,
+    "continuationDurationSeconds": null
+  },
+  "packagingOnlyUpdate": {
+    "nativeTestedVersion": "0.1.0-alpha.2+codex.20260930094728",
+    "runtimeSkillsRulesHooksByteIdentical": true,
+    "runtimeProviderRerunForPackaging": false,
+    "changes": "acceptance documentation and package identity only",
+    "packageVersion": "0.1.0-alpha.2+codex.20260930132230"
+  },
+  "writingGuidanceUpdate": {
+    "changedReference": "skills/repo-knowledge/references/current-docs.md",
+    "addedSentences": 2,
+    "nativeRuntimeVersion": "0.1.0-alpha.2+codex.20260930094728",
+    "scriptsRulesHooksByteIdentical": true,
+    "newGuidanceNativeIntegration": "not rerun",
+    "explicitSkillSemanticStages": 2,
+    "stage1TestsPassed": 11,
+    "stage2TestsPassed": 22,
+    "independentWritingReview": "passed",
+    "originalOutputsUnedited": true,
+    "implicitDiscovery": "not established",
+    "causalImprovement": "not established",
+    "packageVersion": "0.1.0-alpha.2+codex.20260930135940"
+  },
+  "coherentDocumentationUpdate": {
+    "packageVersion": "0.1.0-alpha.2+codex.20260930141251",
+    "changedReference": "skills/repo-knowledge/references/current-docs.md",
+    "userPages": [
+      "README.md",
+      "docs/installation.md",
+      "docs/configuration.md",
+      "docs/hook-diagnostics.md"
+    ],
+    "independentWholePageReview": "passed",
+    "offlineAggregatePassed": 129,
+    "modelRerun": false,
+    "nativeIntegrationRerun": false,
+    "priorWritingSampleAppliesTo": "preceding two-sentence guidance only",
+    "scriptsRulesHooksByteIdenticalTo": "0.1.0-alpha.2+codex.20260930094728"
+  },
+  "precisionGuidanceUpdate": {
+    "packageVersion": "0.1.0-alpha.2+codex.20260930143336",
+    "changedReferences": [
+      "skills/repo-knowledge/references/current-docs.md",
+      "skills/repo-knowledge/references/decisions.md"
+    ],
+    "independentWholeGuidanceReview": "passed",
+    "retrospectivePriorArtifacts": "reviewed existing stage2 docs and two decisions; no defect found",
+    "priorArtifactTestsRerun": false,
+    "modelRerun": false,
+    "nativeIntegrationRerun": false,
+    "offlineAggregatePassed": 129,
+    "runtimeChanged": false
+  },
+  "testSuiteReview": {
+    "packageVersion": "0.1.0-alpha.2+codex.20260930144911",
+    "previousTests": 129,
+    "currentTests": 123,
+    "duplicatesRemovedOrMerged": 6,
+    "independentReview": "passed",
+    "filesystemOnlyFixtures": "no Git initialization or baseline commits",
+    "packageInventory": "explicit sorted inclusion/exclusion, byte size and known digest",
+    "runtimeSkillsRulesHooksChanged": false,
+    "evalScenariosChanged": false,
+    "ciMatrixChanged": false,
+    "modelOrNativeRerun": false
+  },
+  "publicationDocumentation": {
+    "packageVersion": "0.1.0-alpha.2+codex.20260930145548",
+    "installSource": "GitHub marketplace by default; local source for development",
+    "runtimeChanged": false,
+    "nativeModelRerun": false
+  }
 }

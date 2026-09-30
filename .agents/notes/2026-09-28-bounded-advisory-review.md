@@ -16,7 +16,7 @@ Requiring a Markdown diff would reward unnecessary documents and reject correct 
 The mechanism can remind without dictating that a note must exist. It accepts honest not-needed or deferred outcomes and cannot prove those judgments are correct. The one-reminder budget and fail-open errors protect usability at the expense of enforcement. Git changes from another process remain indistinguishable from agent edits.
 
 ## Evidence
-Offline tests exercise real Git worktrees and hook subprocess JSON, including stale receipts and repeated stops. Native Codex delivery and real model behavior remain unverified. See the current verification report rather than interpreting these tests as a model-quality guarantee.
+Offline tests exercise real Git worktrees and hook subprocess JSON, including stale receipts and repeated stops. At the original 2026-09-28 decision, native delivery and model behavior were unverified. Subsequent bounded native acceptance is recorded in the [current verification report](../../VERIFICATION.md); it is not a model-quality guarantee. The current protocol assigns receipt persistence to the host Stop hook using the final assistant status line, because the model sandbox need not write plugin state. The original advisory rationale above remains unchanged.
 
 ## Reconsider when
 A stable host API can identify authorized task edits and surface a low-cost semantic review signal without introducing a second writer. Any stronger blocking policy needs measured false-positive rates and an escape path.

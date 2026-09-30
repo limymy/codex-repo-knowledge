@@ -20,8 +20,8 @@
     },
     "probe": "const text=run([]);assert.equal(text,'Ada\\nLin\\n');assert.deepEqual(JSON.parse(run(['--json'])),[{name:'Ada'},{name:'Lin'}]);",
     "docs": "changed",
-    "notes": "new",
-    "focus": "决策解释真实 JSON.parse 兼容约束与 JSONL 取舍，当前文档描述已实现选项，不虚构其他实验。"
+    "notes": "review",
+    "focus": "JSON.parse 兼容约束与 JSONL 取舍有真实、可检索的持久归属；若已有 owning 文档充分承载理由则不强制另建 note，不虚构实验。"
   },
   {
     "id": "mechanical-rename",
