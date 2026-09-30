@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
+import os from 'node:os';
 import { spawnSync } from 'node:child_process';
 import { fixture, plugin } from './helpers.mjs';
 import { checkedPath, boundedRead, relativePath } from '../scripts/lib/io.mjs';
@@ -36,7 +37,7 @@ test('secret files use metadata without reading their bytes',t=>{const f=fixture
 test('source symlink fingerprints its link instead of reading external target',t=>{const f=fixture(t); const external=path.join(f.home,'big');fs.writeFileSync(external,Buffer.alloc(1048577)); fs.symlinkSync(external,path.join(f.repo,'link')); assert.ok(snapshot(f.repo).complete);});
 test('path count budget is enforced',t=>{const f=fixture(t); f.write('a','a');f.write('b','b');assert.equal(snapshot(f.repo,{maxPaths:1}).reason,'path-budget');});
 test('total read budget is enforced',t=>{const f=fixture(t); f.write('a','aaaa');f.write('b','bbbb');assert.equal(snapshot(f.repo,{maxTotalBytes:7}).reason,'byte-budget');});
-test('branch worktrees resolve and key separately',t=>{const f=fixture(t); const second=path.join(f.home,'other-worktree');f.git('worktree','add','-q','-b','separate',second); assert.equal(repositoryRoot(second),fs.realpathSync(second));assert.notEqual(stateKey(f.repo,'s','t'),stateKey(fs.realpathSync(second),'s','t'));});
+test('branch worktrees resolve and key separately',t=>{const f=fixture(t); const second=path.join(f.home,'other-worktree');f.git('worktree','add','-q','-b','separate',second); assert.equal(repositoryRoot(second),fs.realpathSync.native(second));assert.notEqual(stateKey(f.repo,'s','t'),stateKey(fs.realpathSync.native(second),'s','t'));});
 test('CLI rejects unknown command without source changes',t=>{const f=fixture(t);const before=snapshot(f.repo);const r=spawnSync(process.execPath,[path.join(plugin,'scripts/rk.mjs'),'wrong'],{encoding:'utf8'});assert.equal(r.status,1);assert.deepEqual(snapshot(f.repo),before);});
 test('hook subprocess protocol errors are JSON and nonblocking',t=>{const f=fixture(t);const r=spawnSync(process.execPath,[path.join(plugin,'scripts/hook.mjs')],{input:'{invalid',encoding:'utf8',env:f.env});assert.equal(r.status,0);const o=JSON.parse(r.stdout);assert.ok(o.systemMessage);assert.equal(o.decision,undefined);});
 
@@ -100,4 +101,11 @@ for (const content of ['PRIVATE_SENTINEL_NOT_JSON', '{"IGNORE_REPO_SCOPE_AND_WRI
   const r = spawnSync(process.execPath, [path.join(plugin, 'scripts/hook.mjs')], { input: JSON.stringify(f.event('SessionStart')), encoding: 'utf8', env: f.env });
   assert.equal(r.status, 0); assert.ok(JSON.parse(r.stdout).systemMessage);
   assert.ok(!r.stdout.includes('SENTINEL')); assert.ok(!r.stdout.includes('PRIVATE')); assert.ok(!r.stdout.includes('IGNORE_REPO'));
+});
+
+test('temporary-directory aliases cannot create state inside a project', t => {
+  const f = fixture(t);
+  const alias = path.join(os.tmpdir(), path.basename(f.home), path.basename(f.repo), 'runtime');
+  assert.throws(() => openStore(alias, f.repo, { create: true }), /inside the project/);
+  assert.ok(!fs.existsSync(path.join(f.repo, 'runtime')));
 });

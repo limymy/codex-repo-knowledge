@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 import { inspectInstalled } from './lib/codex-probe.mjs';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const exe = process.env.RK_CODEX_BIN || 'codex';
-const home = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'rk-native-smoke-')));
+const home = fs.realpathSync.native(fs.mkdtempSync(path.join(os.tmpdir(), 'rk-native-smoke-')));
 const profile = path.join(home, 'codex');
 fs.mkdirSync(profile);
 const env = { ...process.env, HOME: home, USERPROFILE: home, CODEX_HOME: profile, XDG_CONFIG_HOME: path.join(home, 'config'), XDG_CACHE_HOME: path.join(home, 'cache') };

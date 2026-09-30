@@ -4,7 +4,7 @@
 
 你正常描述需求、讨论方案、让 Agent 修改代码。插件提供默认维护职责和按需写作规范，让 Agent 判断哪些内容需要更新，而不是要求你每轮提醒“写 docs”“记 notes”。
 
-> **Alpha：`0.1.0-alpha.2+codex.20260930014233`。** 已验证离线逻辑和原生安装、技能/Hook 发现；真实 Hook 执行与模型行为尚待验收。已完成与未完成的验证分别记录在 [VERIFICATION.md](VERIFICATION.md)。
+> **Alpha：`0.1.0-alpha.2+codex.20260930014724`。** 已验证离线逻辑和原生安装、技能/Hook 发现；真实 Hook 执行与模型行为尚待验收。已完成与未完成的验证分别记录在 [VERIFICATION.md](VERIFICATION.md)。
 
 ## 解决什么问题
 

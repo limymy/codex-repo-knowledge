@@ -24,7 +24,7 @@ function git(cwd, args, { allowUnborn = false } = {}) {
 export function repositoryRoot(cwd) {
   if (typeof cwd !== 'string' || !path.isAbsolute(cwd)) throw new Error('Hook cwd must be absolute');
   const output = git(cwd, ['rev-parse', '--show-toplevel']).replace(/\r?\n$/, '');
-  return fs.realpathSync(output);
+  return fs.realpathSync.native(output);
 }
 export function parseStatus(text) {
   const records = text.split('\0');

@@ -1,6 +1,6 @@
 {
   "name": "repo-knowledge",
-  "version": "0.1.0-alpha.2+codex.20260930014233",
+  "version": "0.1.0-alpha.2+codex.20260930014724",
   "description": "Maintain confirmed development rules, current documentation and durable design decisions during everyday Codex work.",
   "author": {
     "name": "Repo Knowledge contributors"

@@ -1,10 +1,10 @@
-# 验证记录：0.1.0-alpha.2+codex.20260930014233
+# 验证记录：0.1.0-alpha.2+codex.20260930014724
 
 核验日期：2026-09-30。Linux x86_64，Node v24.19.0，Git 2.52.0，Codex CLI 0.159.0-alpha.7。结果见 [机器可读报告](reports/verification.json)。
 
 ## 已执行
 
-- `npm run verify`：100 项通过、0 失败、0 跳过，包含真实临时 Git 仓库及 Hook 子进程协议测试
+- `npm run verify`：101 项通过、0 失败、0 跳过，包含真实临时 Git 仓库及 Hook 子进程协议测试
 - 官方 Codex 兼容 manifest 验证器：通过
 - `npm run smoke:codex`：在隔离 HOME/CODEX_HOME 注册、安装、列出和卸载插件；原生 app-server 发现两个技能和三个 Hook，均保持未信任
 - 四项临时副本故障注入均被测试检出：移除提醒上限、复用过期 receipt、重新允许 Git filter 执行、移除最终状态目录边界检查；交付代码不含故障注入

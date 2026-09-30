@@ -5,7 +5,7 @@ import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 export const plugin = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 export function fixture(t, { dirty = false } = {}) {
-  const home = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'rk-test-')));
+  const home = fs.realpathSync.native(fs.mkdtempSync(path.join(os.tmpdir(), 'rk-test-')));
   const repo = path.join(home, 'repo with spaces');
   const data = path.join(home, 'plugin-data');
   fs.mkdirSync(repo); fs.mkdirSync(data);

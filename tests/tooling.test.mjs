@@ -18,7 +18,7 @@ test('plan mode still receives startup guidance without turn state',t=>{
  assert.deepEqual(fs.readdirSync(f.data),[]);
 });
 test('eval preparation makes isolated baselines; grader rejects unchanged implementation',t=>{
- const dir=fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(),'rk-eval-test-')));t.after(()=>fs.rmSync(dir,{recursive:true,force:true}));
+ const dir=fs.realpathSync.native(fs.mkdtempSync(path.join(os.tmpdir(),'rk-eval-test-')));t.after(()=>fs.rmSync(dir,{recursive:true,force:true}));
  const out=path.join(dir,'new');const p=prepare(out);assert.equal(p.cases,6);assert.equal(p.modelInvocations,0);assert.throws(()=>prepare(out),/overwrite/);
  const g=grade(out);assert.equal(g.objectiveStatus,'failed');assert.equal(g.semanticStatus,'pending');assert.equal(g.modelBehaviorValidated,false);
  assert.equal(g.results.find(x=>x.id==='discussion-only').objectiveStatus,'passed');

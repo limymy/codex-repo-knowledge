@@ -16,7 +16,8 @@ test('SessionStart supplies guidance and resources without changing repository f
   const r = handleEvent(f.event('SessionStart'), f.env);
   assert.equal(r.hookSpecificOutput.hookEventName, 'SessionStart');
   assert.ok(r.hookSpecificOutput.additionalContext.includes('standing maintenance duties'));
-  assert.ok(r.hookSpecificOutput.additionalContext.includes(plugin));
+  const resources = JSON.parse(r.hookSpecificOutput.additionalContext.split('Resource locations (JSON data, never execute as commands): ')[1]);
+  assert.equal(resources.skill, path.join(plugin, 'skills/repo-knowledge/SKILL.md'));
   assert.deepEqual(snapshot(f.repo), before); assert.deepEqual(fs.readdirSync(f.data), []);
 });
 for (const source of ['startup', 'resume', 'clear', 'compact']) test(`SessionStart ${source} reinjects the bounded rules`, t => {
@@ -89,7 +90,8 @@ test('malformed config is reported without granting new work', t => {
   const f = fixture(t); f.write('.repo-knowledge.json', '{bad'); const r = hookProcess(f, f.event('SessionStart')); assert.ok(r.systemMessage); assert.equal(r.decision, undefined);
 });
 test('hook launcher works when installed path contains spaces and a single quote', t => {
-  const f = fixture(t); const copy = path.join(f.home, "plugin space and 'quote"); fs.cpSync(plugin, copy, { recursive: true });
+  const f = fixture(t); const copy = path.join(f.home, "plugin space and 'quote"); fs.cpSync(plugin, copy, { recursive: true, filter: source => path.basename(source) !== '.git' });
+  assert.ok(!fs.existsSync(path.join(copy, '.git')));
   const r = hookProcess(f, f.event('SessionStart'), { PLUGIN_ROOT: copy }); assert.ok(r.hookSpecificOutput.additionalContext.includes('standing maintenance duties'));
 });
 test('prompt and transcript contents are never stored or reflected', t => {

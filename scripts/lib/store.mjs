@@ -12,12 +12,24 @@ export function openStore(dataRoot, repoRoot, { create = false } = {}) {
   if (inside(repoRoot, full)) throw new Error('Plugin runtime data cannot be stored inside the project');
   // Host supplies PLUGIN_DATA. Refuse existing symlink components, not just leaves.
   checkedPath(path.parse(full).root, path.relative(path.parse(full).root, full));
+  // Resolve existing ancestors before mkdir: Windows 8.3 aliases must not evade
+  // containment checks or create even an empty directory in the project.
+  const canonicalRepo = fs.realpathSync.native(repoRoot);
+  let ancestor = full;
+  const missing = [];
+  while (!fs.existsSync(ancestor)) {
+    const parent = path.dirname(ancestor);
+    if (parent === ancestor) throw new Error('Plugin data root is unavailable');
+    missing.unshift(path.basename(ancestor)); ancestor = parent;
+  }
+  const canonical = path.join(fs.realpathSync.native(ancestor), ...missing);
+  if (inside(canonicalRepo, canonical) || inside(canonicalRepo, path.join(canonical, STATE_DIRECTORY))) throw new Error('Plugin runtime data cannot be stored inside the project');
   if (create) fs.mkdirSync(full, { recursive: true, mode: 0o700 });
   if (!fs.existsSync(full)) return null;
-  const resolved = fs.realpathSync(full);
-  if (inside(repoRoot, resolved)) throw new Error('Plugin data resolves into the project');
+  const resolved = fs.realpathSync.native(full);
+  if (inside(canonicalRepo, resolved)) throw new Error('Plugin data resolves into the project');
   const dir = checkedPath(resolved, STATE_DIRECTORY);
-  if (inside(repoRoot, dir)) throw new Error('Plugin state cannot be stored inside the project');
+  if (inside(canonicalRepo, dir)) throw new Error('Plugin state cannot be stored inside the project');
   if (create) fs.mkdirSync(dir, { recursive: true, mode: 0o700 });
   if (!fs.existsSync(dir)) return null;
   return dir;
