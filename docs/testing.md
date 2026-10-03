@@ -2,6 +2,25 @@
 
 The layers below have different claims. Passing one does not establish another.
 
+## Direct documentation review
+
+Maintain repository documentation directly under the same [writing rules](../skills/repo-knowledge/references/current-docs.md) used by the plugin. A maintainer can inspect source, update the owning guide and review the complete affected sections without a Codex model run. Check facts, applicable conditions, compatibility guarantees, failure behavior and evidence limits; verify relevant commands and local links. Do not create a decision record unless there is a genuine lasting choice to explain.
+
+For prose-only changes, start with `git diff --check` and `npm run check` in a clean source checkout. The package checker reads distributable files, so keep credentials, Codex profiles and test-run evidence outside that checkout. It checks local link targets and package consistency, not factual accuracy or `SHA256SUMS`. Update an affected checksum manifest separately when preparing a distribution.
+
+The inventory behind package checking is filesystem-wide, not `git ls-files` and
+not `.gitignore`-aware. [package-files.mjs](../scripts/package-files.mjs) skips
+entries named `.git`, `node_modules`, `.evals`, `dist` and `coverage`, rejects
+symlinks, and reads other regular files, including hidden and untracked files.
+Use an intended source-only tree; a clean Git status alone does not establish
+that ignored local files are absent. `npm run pack:files` prints a JSON inventory
+with sizes and hashes; it creates neither an archive nor `SHA256SUMS`. Review the
+inventory and verify any separately prepared archive or checksum manifest against
+its intended contents rather than treating a successful package check as that
+verification.
+
+If the change alters instructions that govern model behavior, review the text first and then select a small real task for that behavior. Grammar, layout or factual corrections to user documentation do not by themselves require another model run. Model-generated text remains a candidate for review, never the authority for current behavior.
+
 ## Offline deterministic suite
 
 Run `npm run verify`. It uses Node's built-in test runner, real temporary Git repositories and real Node hook subprocesses supplied with documented JSON inputs. It checks instruction output, bounded reminders, unchanged pre-existing dirt, duplicate/concurrent events, receipts and stale digests, traversal/symlink refusal, budgets, state corruption, note structures and package consistency.
@@ -30,6 +49,20 @@ The script also starts the native app-server and calls only `skills/list` and `h
 ## Genuine model acceptance
 
 Start with the [functional contract and continuous scenarios](functional-contract.md). Independent one-turn fixtures below do not establish later retrieval, proposal transitions or stale-rule refresh.
+
+### Minimal native checks
+
+Choose the claim to establish before starting the model. A useful small sequence is:
+
+1. Start a native session in a disposable repository with an existing owning document, and submit one ordinary, bounded behavior-change task. Do not tell the model which document to edit. Verify the native SessionStart and UserPromptSubmit events, review the actual reads and changes, and observe Stop and the matching changed-work receipt.
+2. Start a fresh read-only task that needs the updated knowledge. Check targeted retrieval and the answer, then verify that the project is unchanged. This is evidence for that retrieval case, not general recall reliability.
+3. Add resume/compact, scope changes, decision lifecycle or missing-status recovery only when that is the specific acceptance gap. A normal no-op Stop or a valid first answer does not exercise the missing-status reminder branch.
+
+Do not turn this sequence into a full-repository documentation-writing assignment. Direct documentation review and native behavior acceptance serve different purposes. A short end-to-end case must still check semantic adoption; merely observing a script exit or a receipt is insufficient.
+
+Record model/host errors separately from plugin outcomes. If a run is interrupted, preserve completed stages, partial changes and the last observed activity. A total deadline, stream disconnection or command exit is not a substitute for locating the unfinished step. Resume only the unfinished task when appropriate; do not rerun completed setup or attribute all elapsed time to hooks. Keep credentials and detailed trial infrastructure outside the package.
+
+### Selecting an existing fixture
 
 On an authenticated development machine, install the plugin in the normal Codex profile and inspect/trust its hooks. Do not send credentials to the plugin or another person. First use a disposable project; do not test on production or uncommitted research work.
 

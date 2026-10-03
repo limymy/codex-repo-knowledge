@@ -36,6 +36,8 @@ node /path/to/installed/plugin/scripts/rk.mjs diagnostics --cwd /path/to/test-re
 
 三个路径都必须来自已确认的信息。源码目录、doctor 输出或自行创建的临时目录不能代替宿主数据目录；本文不提供猜测的 App 日志位置。
 
+读取器的退出码不能单独证明读到了诊断：配置或状态不可用时也可能正常退出并返回 `status: "unavailable"`、固定的 `errorCategory` 和空事件。先看 JSON 的 `status`，再看 `enabled` 与 `events`。`status: "read"` 但事件为空只表示读取成功且没有返回记录；关闭诊断后仍可能读到之前保留的事件。
+
 ## 判断事件与维护效果
 
 事件记录包含 UTC 时间、事件名、白名单来源、阶段和固定结果类别：
@@ -50,6 +52,8 @@ node /path/to/installed/plugin/scripts/rk.mjs diagnostics --cwd /path/to/test-re
 | failed / runtime-error | 处理失败；不记录原始错误文本 |
 
 completed 在标准输出写入之前记录，所以单靠它不能证明宿主收到上下文，更不能证明模型采用了规则。手工运行脚本也会产生记录，不能拿这种记录冒充宿主原生事件。恢复和压缩须使用宿主真实的 resume/compact 操作；普通续聊不能替代。
+
+宿主报告的单个 Hook 执行耗时与整轮任务耗时不同。排查慢任务时，分别看 Hook 完成事件、模型响应或重试、工具执行及任务截止时间；没有这些证据时，不把全部等待时间归因于插件。
 
 正常功能核验可以使用一个普通小任务：先确认原生启动与 Prompt 事件，再检查 Agent 是否读取适用规则、维护真正拥有内容的文档，并在需要时报告状态。结束后检查原生 Stop 与宿主保存的当前快照回执；Stop 的 no-op 本身不等于回执成功。只读任务应保持项目不变，也不要求维护状态。人工遗漏状态等辅助分支的测试方法与已有结果见 [测试说明](testing.md) 和 [验证记录](../VERIFICATION.md)，无需在日常任务中故意省略状态。
 

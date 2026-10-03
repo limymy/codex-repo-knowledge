@@ -67,7 +67,7 @@ Git 变更检测无法可靠区分并发修改；子模块、检查预算或安�
 
 ## 开发与参考
 
-开发者可运行 `npm run verify` 做离线检查。原生发现测试、合成任务准备和行为验收方法见 [测试说明](docs/testing.md) 与 [贡献指南](CONTRIBUTING.md)。
+开发者可直接按相同规则维护和审阅本仓库文档，无需让 Codex 重新生成整套说明。`npm run verify` 提供离线检查；真实 Codex 会话用于小范围的原生行为验收。各类检查的用途与选择方法见 [测试说明](docs/testing.md) 和 [贡献指南](CONTRIBUTING.md)。
 
 本插件受 DeepSeek Harness 的分层规则、Agent Notes 和文档维护方法，以及 OpenAI 的 Agent 工程实践启发，不属于上述项目的官方插件。参考与适配关系见 [规则来源](docs/sources.md)。
 
