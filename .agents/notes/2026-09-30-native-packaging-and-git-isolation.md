@@ -1,19 +1,19 @@
-# Decision: Prefer observed native loading and bounded Git isolation
+# Decision: 优先采用已观察到的原生加载方式与有界 Git 隔离
 
 <!-- repo-knowledge:decision -->
 Status: implemented
 
 ## Problem
-The alpha2 archive installed successfully while native hooks/list returned no hooks on Codex CLI 0.159.0-alpha.7. Its dual portable/compatibility manifests therefore did not establish automatic operation. Read-only-looking Git status commands could also execute clean/process filters, submodule-local filters, or lazy-fetch transports.
+alpha2 压缩包可以成功安装，但在 Codex CLI 0.159.0-alpha.7 上，原生 `hooks/list` 未返回任何 Hook。因此，便携与兼容双 manifest 并不能证明插件会自动运行。看似只读的 Git 状态命令，还可能执行 clean/process 过滤器、子模块本地过滤器，或触发延迟获取传输。
 
 ## Decision
-Keep only the Codex compatibility manifest and default hooks/hooks.json discovery, which the native host actually lists. Disable configured filter executables and lazy-fetch transports per Git child process. Detect gitlinks before status and fail open for repositories containing submodules. Validate the final derived state directory against the project root.
+仅保留 Codex 兼容 manifest，以及原生宿主实际能够列出的默认 `hooks/hooks.json` 发现方式。在每个 Git 子进程中，禁用已配置的过滤器可执行程序和延迟获取传输。在运行状态检查之前检测 gitlink；对于包含子模块的仓库，降级放行。根据项目根目录校验最终推导出的状态目录。
 
 ## Alternatives considered
-Retaining the documented portable manifest was tested, with and without explicit hook paths, and yielded no native hooks on the observed CLI. Removing only the compatibility hooks field did not fix it. Compatibility-only packaging did. Recursively sanitizing every submodule would add a larger race-prone configuration walker; skipping reminders for gitlink repositories preserves the advisory scope instead.
+曾测试过保留文档所述的便携 manifest，既测试了显式指定 Hook 路径的情况，也测试了未指定的情况；在所观察的 CLI 上，两者都未发现原生 Hook。仅移除兼容 manifest 中的 hooks 字段，不能解决问题。只保留兼容 manifest 的打包方式则可以。递归清理所有子模块配置，会引入规模更大且易受竞态影响的配置遍历器；对含 gitlink 的仓库跳过提醒，则可以维持仅提供提醒的职责边界。
 
 ## Consequences
-Installed skills and hooks are discoverable in the tested alpha CLI; this does not prove stable-version compatibility, trusted execution or model compliance. Submodule projects retain standing guidance but lose automatic change reminders. Git may still read tracked contents while assessing status; plugin hashing limits are not a total Git I/O budget.
+在已测试的 alpha CLI 中，安装后的技能与 Hook 可以被发现；这不能证明稳定版兼容性、受信执行或模型遵从性。包含子模块的项目仍保留长期有效的维护指导，但失去自动改动提醒。Git 在评估状态时仍可能读取受跟踪的内容；插件的哈希计算限制并不是 Git 的总 I/O 预算。
 
 ## Evidence
-Native isolated installation and app-server discovery, Git filter/transport marker reproductions, state containment regression tests, and the current [verification record](../../VERIFICATION.md). No hook trust or user profile was changed.
+证据包括隔离环境中的原生安装与 app-server 发现、Git 过滤器及传输标记复现、状态目录包含关系的回归测试，以及当前[验证记录](../../VERIFICATION.md)。未更改任何 Hook 信任设置或使用者配置。

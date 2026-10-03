@@ -1,135 +1,88 @@
-# Architecture
+# 架构
 
-This page owns the current component boundaries and maintenance-receipt protocol.
-For user-facing settings and final-line syntax, use [configuration](configuration.md);
-for durable reasons, use the [advisory-review decision](../.agents/notes/2026-09-28-bounded-advisory-review.md).
+本页统一维护当前组件边界与维护回执协议。面向用户的设置和末行语法见 [配置说明](configuration.md)，长期取舍理由见 [建议式审阅决定](../.agents/notes/2026-09-28-bounded-advisory-review.md)。
 
-## Implementation map
+## 实现入口
 
-| When changing or investigating… | Start here | Boundary to preserve |
+| 修改或排查的内容 | 从这里开始 | 必须保留的边界 |
 | --- | --- | --- |
-| Host event input/output and safe errors | [hook.mjs](../scripts/hook.mjs) | Bounded stdin, JSON output, fixed fail-open errors; no transcript fallback |
-| Startup duties and turn transitions | [runtime.mjs](../scripts/lib/runtime.mjs), [bootstrap.md](../rules/bootstrap.md) | Guidance does not authorize edits; one persisted reminder budget per turn |
-| Final-answer recognition | [final-status.mjs](../scripts/lib/final-status.mjs) | Closed grammar, independent outcomes, current host message only |
-| What counts as a changed snapshot | [git.mjs](../scripts/lib/git.mjs) | HEAD, index and worktree identity; bounded observation without author attribution |
-| State ownership and file safety | [store.mjs](../scripts/lib/store.mjs), [io.mjs](../scripts/lib/io.mjs) | Outside-project state, per-turn exclusion and checked local file access |
-| Project options and note validation | [config.mjs](../scripts/lib/config.mjs), [notes.mjs](../scripts/lib/notes.mjs) | Options cannot grant permission; opt-in structure checking cannot grade reasoning |
-| Optional execution diagnostics | [diagnostics.mjs](../scripts/lib/diagnostics.mjs) | Separate bounded records, not delivery or model-consumption proof |
+| 宿主事件输入/输出与安全错误 | [hook.mjs](../scripts/hook.mjs) | 有界标准输入、JSON 输出、固定的降级放行错误；不回退读取会话记录 |
+| 启动职责与回合切换 | [runtime.mjs](../scripts/lib/runtime.mjs)、[bootstrap.md](../rules/bootstrap.md) | 职责说明不授权修改；每回合最多提醒一次，预算持久化保存 |
+| 最终答复识别 | [final-status.mjs](../scripts/lib/final-status.mjs) | 固定语法、独立结果，只读取宿主当前消息 |
+| 哪些变化构成新快照 | [git.mjs](../scripts/lib/git.mjs) | HEAD、暂存区与工作树状态标识；有界观察，不归因于某个修改者 |
+| 状态归属与文件安全 | [store.mjs](../scripts/lib/store.mjs)、[io.mjs](../scripts/lib/io.mjs) | 状态位于项目外，按回合互斥，本地文件访问须经过检查 |
+| 项目选项与笔记校验 | [config.mjs](../scripts/lib/config.mjs)、[notes.mjs](../scripts/lib/notes.mjs) | 选项不能授予权限；自愿采用的结构检查不能评判推理质量 |
+| 可选执行诊断 | [diagnostics.mjs](../scripts/lib/diagnostics.mjs) | 独立的有界记录，不证明宿主交付或模型采用 |
 
-The [test guide](testing.md) maps these contracts to focused regression groups.
-The operator entry point, [rk.mjs](../scripts/rk.mjs), exposes inspection and
-compatibility commands; it is not the native hook dispatcher.
+[测试说明](testing.md) 将这些契约映射到各组针对性回归。操作者入口 [rk.mjs](../scripts/rk.mjs) 提供检查和兼容命令，不承担原生 Hook 分发。
 
-## Instruction delivery and authority
+## 指令交付与权限层级
 
-`.codex-plugin/plugin.json` is the supported Codex manifest; `hooks/hooks.json` uses default discovery without a manifest `hooks` field. The repository marketplace references the repository root. Native discovery on CLI 0.159.0-alpha.7 found that the original dual portable/compatibility package exposed skills but no hooks; compatibility-only packaging exposes all three. See [packaging decision](../.agents/notes/2026-09-30-native-packaging-and-git-isolation.md).
+`.codex-plugin/plugin.json` 是受支持的 Codex 清单；`hooks/hooks.json` 通过默认发现机制加载，清单中不设置 `hooks` 字段。仓库 marketplace 指向仓库根目录。在 CLI 0.159.0-alpha.7 的原生发现检查中，最初同时提供可移植与兼容格式的包只暴露技能，没有暴露 Hook；仅使用兼容格式后，三个 Hook 均可被发现。详见 [打包决定](../.agents/notes/2026-09-30-native-packaging-and-git-isolation.md)。
 
-`SessionStart` injects the bundled `rules/bootstrap.md` with resource locations. The implicit `repo-knowledge` skill routes current documentation and durable decisions to separate references. The explicit-only setup skill optionally merges project-specific instructions with permission. This plugin does not depend on the user invoking a workflow every turn, but execution requires host support, enabled/trusted hooks, and model compliance.
+`SessionStart` 注入包内的 `rules/bootstrap.md` 和资源位置。可隐式调用的 `repo-knowledge` 技能将当前文档和长期决定分别引向对应参考规范。仅可显式调用的 setup 技能可在获得许可后，选择性合并项目专用指令。插件不依赖用户每回合启动工作流，但执行仍要求宿主支持、Hook 已启用并受信任，以及模型遵循指令。
 
-The responsibilities are separate: hooks deliver guidance and track bounded operational state; the agent retrieves knowledge and edits authorized project files; maintainers judge whether those edits are correct. The same repository writing rules can be followed directly by a maintainer without running a model session. Native tests are needed to establish host delivery and model behavior, not to author the plugin's own documentation.
+各方职责相互独立：Hook 交付职责说明并跟踪有界运行状态；Agent 检索知识并修改已获授权的项目文件；维护者判断这些修改是否正确。维护者无需运行模型会话，也可以直接遵循同一套仓库写作规则。原生测试用于证明宿主交付和模型行为，不是编写插件自身文档的前提。
 
-Repository text is not promoted into the hook's developer context. Resource paths are JSON data, not executable commands. Higher-priority instructions, direct user scope and local conventions remain controlling; a reminder grants no extra permission. The maintenance handler ignores identified subagent events (`agent_id`). Plan mode receives startup guidance, but does not collect change receipts or trigger Stop reminders. Optional script diagnostics wrap this handler separately, so a diagnostic event does not establish participation in turn tracking.
+仓库文本不会被提升到 Hook 的开发者级上下文。资源路径是 JSON 数据，不是可执行命令。更高优先级的指令、用户直接限定的范围和本地约定仍然有效；提醒不授予额外权限。维护处理器忽略带有 `agent_id` 的已识别子 Agent 事件。计划模式会收到启动职责，但不收集变更回执，也不触发 Stop 提醒。可选脚本诊断独立包裹该处理器，因此一条诊断事件不能证明该事件参与了回合跟踪。
 
-The [functional contract](functional-contract.md) distinguishes DSH native dynamic instruction loading from this Codex adaptation. SessionStart reinjects responsibilities and asks for targeted rule refresh; it does not itself reload project instructions or guarantee later knowledge retrieval.
+[功能契约](functional-contract.md) 区分了 DSH 原生动态指令加载与本 Codex 适配。SessionStart 重新注入职责，并要求有针对性地刷新规则；它本身不重新加载项目指令，也不保证后续知识检索。
 
-## Turn lifecycle
+## 回合生命周期
 
-### Baseline and scope
+### 基线与作用范围
 
-`UserPromptSubmit` discovers the Git worktree and records a bounded baseline under host-provided `PLUGIN_DATA`. The state key hashes the canonical repository root, `session_id` and `turn_id`. Duplicate prompt events retain the original baseline and reminder budget. The handler asks for a short final maintenance status; it supplies neither a state-writing command nor an opaque state identifier to the model.
+`UserPromptSubmit` 发现 Git 工作树，并在宿主提供的 `PLUGIN_DATA` 下记录有界基线。状态键由规范化仓库根目录、`session_id` 和 `turn_id` 计算散列得到。重复的 Prompt 事件保留原有基线和提醒预算。处理器要求答复末尾给出简短维护状态，但既不向模型提供写状态的命令，也不提供不透明状态标识符。
 
-`Stop` uses only that matching turn's existing state. Missing state is not permission to construct a baseline from old changes. Both the baseline and current snapshot must be complete before any final-message history or receipt is recorded. Tracking is skipped for disabled projects, `stopReminder: "off"`, plan mode and identified subagents; those gates do not transfer review to another turn. See [configuration](configuration.md) for the distinction between disabling reminders and disabling the plugin.
+`Stop` 只使用与该回合匹配的已有状态。缺失状态不意味着可以用旧变更构造基线。在记录任何最终消息历史或回执之前，基线与当前快照都必须完整。项目被禁用、`stopReminder: "off"`、计划模式和已识别子 Agent 都会跳过跟踪；这些门控不会把审阅转移给另一回合。关闭提醒与禁用插件的区别见 [配置说明](configuration.md)。
 
-### Stop decisions and ordering
+### Stop 判断与执行顺序
 
-The parser accepts only the exact final plain-text status in the host's current
-`last_assistant_message`, with a 16 KiB UTF-8 limit on the entire message. It
-normalizes CRLF and trailing whitespace before hashing the message; it does not
-hash only the status line. The supported English/Chinese forms and separation
-from lists, quotes and code are owned by [configuration](configuration.md).
+解析器只接受宿主当前 `last_assistant_message` 中精确匹配的末尾纯文本状态，整条消息的 UTF-8 大小上限为 16 KiB。它在计算消息散列前会统一 CRLF 并处理末尾空白；散列对象是整条消息，而非仅状态行。支持的中英文格式，以及与列表、引用和代码的分隔要求，由 [配置说明](configuration.md) 统一维护。
 
-A snapshot needs review only when its digest differs from both the turn baseline
-and the latest recorded review digest. For a matching turn with complete
-snapshots and valid state, these branches are ordered as follows:
+只有快照摘要同时不同于回合基线与最近记录的审阅摘要时，才需要审阅。对于回合匹配、快照完整且状态有效的情况，按以下顺序处理分支：
 
-| Condition | Persisted effect | Host response |
+| 条件 | 持久化影响 | 宿主响应 |
 | --- | --- | --- |
-| A valid message hash is not already remembered and fewer than eight are remembered | Remember the hash; if this snapshot needs review, also store the outcomes and current digest | No continuation |
-| A new valid hash would be the ninth | Keep the existing history and review unchanged | Warning, no continuation |
-| No new valid hash, and the snapshot equals the baseline or latest review | None | No continuation |
-| No new valid hash, and the reminder was already spent or `stop_hook_active` is true | None; a stale review remains stale | No continuation |
-| Review is needed, but the host message is missing, non-string or oversized | No new receipt; existing review unchanged and reminder budget available | Warning, no continuation |
-| Review is needed, no fresh valid status exists, and the host supplied a bounded string | Persist `reminded: true` before responding | One `decision: "block"` advisory continuation |
+| 有效消息散列尚未被记住，且已记住的散列少于八个 | 记住散列；若该快照需要审阅，同时保存结果与当前摘要 | 不续跑 |
+| 新的有效散列将成为第九个 | 保持已有历史和审阅不变 | 提示警告，不续跑 |
+| 没有新的有效散列，且快照与基线或最近审阅相同 | 无 | 不续跑 |
+| 没有新的有效散列，且提醒已用过或 `stop_hook_active` 为 true | 无；过时的审阅仍然过时 | 不续跑 |
+| 需要审阅，但宿主消息缺失、不是字符串或超限 | 不产生新回执；已有审阅不变，提醒预算仍可用 | 提示警告，不续跑 |
+| 需要审阅，没有新的有效状态，且宿主提供了未超限的字符串 | 响应前持久化 `reminded: true` | 通过一次 `decision: "block"` 请求建议式续跑 |
 
-An active Stop continuation with no valid status returns before state lookup.
-An active continuation with a fresh valid status can still take the first branch:
-preventing another reminder does not prevent receipt collection. Once spent, the
-reminder budget is not reset by later edits or a duplicate Prompt event.
+已处于 Stop 续跑中且没有有效状态时，会在查找状态之前返回。已处于续跑中但带有新的有效状态时，仍可进入第一个分支：阻止再次提醒，不妨碍收集回执。提醒预算一旦用过，后续编辑或重复 Prompt 事件都不会将其重置。
 
-### Message history is not a receipt
+### 消息历史不等于回执
 
-An automatically collected `review` associates two outcome enums with one snapshot digest, a
-timestamp, fixed reason, message hash and `source: "stop-final-status"`.
-`acceptedFinalHashes` separately remembers up to eight distinct valid messages,
-including messages first seen on unchanged or already-reviewed snapshots. Such
-observations must not create a receipt merely to populate replay history.
+自动收集的 `review` 将两个结果枚举值与一个快照摘要、时间戳、固定理由、消息散列和 `source: "stop-final-status"` 关联。`acceptedFinalHashes` 则独立记住最多八条不同的有效消息，包括首次出现在未变化或已审阅快照上的消息。不能仅为了补充重放历史，就把这种观察登记成回执。
 
-For example, a valid final answer A successfully remembered before any edit leaves
-`review` empty. If a file later changes, replaying A in the same surviving turn
-state cannot acknowledge that change. Likewise, an answer B remembered after a snapshot was already reviewed
-cannot be reused after another edit. A newly worded answer with the same two
-outcomes is a different hash and may be recorded; this is duplicate-message
-protection, not proof that the agent actually reread or understood the changes.
-The [final-status regressions](../tests/final-status.test.mjs) cover both cases.
+例如，在任何编辑前成功记住有效最终答复 A 时，`review` 仍为空。如果后来文件发生变化，在同一份仍存续的回合状态中重放 A，不能确认该变化已审阅。同样，若答复 B 首次被记住时快照已经过审阅，再次编辑后也不能复用 B。措辞不同但两个结果相同的答复会产生不同散列，可以被记录；这是重复消息保护，不能证明 Agent 确实重新阅读或理解了变化。[最终状态回归](../tests/final-status.test.mjs) 覆盖这两种情况。
 
-An empty Stop output is therefore not evidence of a successful receipt: it also
-occurs for unchanged work, missing state, scope exclusions and exhausted reminder
-budget. Read-only unchanged tasks need no status or receipt. All recorded outcomes
-remain self-reports, not proof of semantic correctness, authorship or awareness of
-concurrent changes.
+因此，Stop 输出为空不能证明成功取得回执：工作未变化、状态缺失、作用范围排除或提醒预算已耗尽时，也会出现空输出。只读且未变化的任务无需状态或回执。所有已记录结果都仍是自报，不能证明语义正确、变更由谁编写，或是否知晓并发变化。
 
-The optional legacy `review` CLI still accepts `--turn-state-id` or legacy `--key`.
-It writes plugin state directly and does not use automatic final-message replay
-collection. It is not the normal model workflow and may be denied by the model's
-filesystem sandbox. The host-owned default does not require expanding that sandbox.
+可选的旧 `review` CLI 仍接受 `--turn-state-id` 或旧 `--key`。它直接写插件状态，不使用自动最终消息重放收集。它不是模型的正常工作流程，可能被模型的文件系统沙箱拒绝。默认的宿主负责方式不需要扩大该沙箱范围。
 
-## Operational state and failure handling
+## 运行状态与失败处理
 
-`scripts/hook.mjs` reads at most 1 MiB of event JSON, delegates lifecycle decisions to `scripts/lib/runtime.mjs`, and writes the result to the host. Its caught input/runtime errors produce a fixed fail-open `systemMessage` without requesting continuation. This process-level catch is distinct from the intentional one-time `decision: "block"` response; direct callers of `handleEvent` can receive thrown errors and must not assume the helper itself implements the process boundary.
+`scripts/hook.mjs` 最多读取 1 MiB 事件 JSON，把生命周期判断委托给 `scripts/lib/runtime.mjs`，然后将结果写给宿主。它捕获到输入或运行时错误后，会返回固定的降级放行 `systemMessage`，不请求续跑。这个进程级捕获边界与有意返回的一次性 `decision: "block"` 不同；直接调用 `handleEvent` 的代码可能收到抛出的错误，不能假定该辅助函数自身实现了进程边界。
 
-Turn state lives outside the repository in the host's plugin-data directory.
-`store.mjs` enforces path containment and attempts an exclusive lock for the turn;
-it does not wait, retry or steal an existing lock. Writes use a temporary file
-followed by rename. Normal collection and reminder responses follow successful
-state writes. If the write or lock fails, the hook returns the safe error response
-instead of requesting an unrecorded continuation. This sacrifices tracking for
-that event; it does not establish that a review happened or make the working tree
-transactional.
+回合状态位于仓库之外、宿主提供的插件数据目录中。`store.mjs` 强制检查路径包含关系，并尝试获取该回合的排他锁；它不等待、不重试，也不抢占已有锁。写入先使用临时文件，再通过重命名替换。正常收集与提醒响应都发生在状态成功写入之后。若写入或加锁失败，Hook 返回安全错误响应，不请求未被记录的续跑。这会放弃该事件的跟踪，但不证明审阅已发生，也不会使工作树具有事务性。
 
-The safe error response is not a rollback guarantee: the rename may have completed
-before lock cleanup or output delivery fails. Nor does rename alone promise
-crash-durable storage. When the distinction matters, inspect the matching state
-through the authorized host context; do not infer persisted receipt presence or
-absence solely from a no-op, warning or diagnostic result.
+安全错误响应不保证回滚：锁清理或输出交付失败之前，重命名可能已完成。仅凭重命名也不能保证崩溃后的持久性。如果这种区别会影响判断，应通过获授权的宿主上下文检查匹配状态；不能仅根据 no-op、警告或诊断结果，推断持久化回执存在或不存在。
 
-States older than seven days from creation are ignored, not automatically deleted.
-Missing identifiers or data, incomplete snapshots, lock conflicts and invalid
-state disable the affected tracking path, sometimes with a warning. Replay
-protection depends on successfully persisted history, available unexpired state
-and complete snapshots; it does not reconstruct missing history. The user-facing
-storage and cleanup contract lives in [configuration](configuration.md), and file-access limits in
-[security](../SECURITY.md).
+自创建起超过七天的状态会被忽略，不会自动删除。标识符或数据缺失、快照不完整、锁冲突和无效状态都会关闭受影响的跟踪路径，部分情况会有警告。重放保护依赖成功持久化的历史、可用且未过期的状态，以及完整快照；不会重建缺失的历史。面向用户的存储与清理约定见 [配置说明](configuration.md)，文件访问限制见 [安全说明](../SECURITY.md)。
 
-`diagnostics.mjs` records only when diagnostics are enabled and its own validation/storage steps succeed. It is separate from turn-state validity and keeps at most 128 records per project. Host notifications, optional script diagnostics and inspection of the resulting project files answer different questions; see [Hook verification](hook-diagnostics.md). No transcript or arbitrary shell-command parsing occurs.
+只有启用诊断，且诊断自身的校验和存储步骤成功时，`diagnostics.mjs` 才会记录。它独立于回合状态的有效性，每个项目最多保留 128 条。宿主通知、可选脚本诊断和对项目最终文件的检查回答的是不同问题，详见 [Hook 核验](hook-diagnostics.md)。整个过程不解析会话记录或任意 shell 命令。
 
-## Change-detection limits
+## 变更检测边界
 
-Git is invoked shell-free with optional locks, fsmonitor, configured clean/process filters, lazy fetching and transport protocols disabled. Gitlink repositories return incomplete before status can descend into submodule-local configuration. Snapshot limits are 1,000 dirty/untracked paths, 1 MiB per file and 8 MiB total. Only changed file contents are hashed by the plugin. Known credential filename patterns use metadata in that hasher; Git may independently read tracked files during status, so these are hashing budgets and not total I/O guarantees or a secret detector. Leaf symlinks are hashed as links, parent symlinks are refused. Non-regular paths, including dirty submodules, make snapshots incomplete.
+Git 调用不经过 shell，并禁用可选锁、fsmonitor、已配置的 clean/process 过滤器、延迟获取和传输协议。包含 gitlink 的仓库会在 status 可能深入子模块本地配置之前返回不完整快照。快照上限为 1,000 个已修改或未跟踪路径、每文件 1 MiB、总计 8 MiB。插件只对已变化文件的内容计算散列。对于匹配已知凭据文件名模式的文件，该散列器使用元数据；Git 在执行 status 时仍可能独立读取已跟踪文件，因此这些只是散列预算，不是总 I/O 保证，也不是秘密检测器。叶节点符号链接按链接本身计算散列，父目录符号链接会被拒绝。非普通文件路径，包括已修改子模块，会使快照不完整。
 
-The baseline includes pre-existing work; unchanged pre-existing dirt does not trigger a reminder. Changes by another process after the baseline cannot be attributed to the model. Snapshots are observations, not filesystem transactions: concurrent modification may invalidate their interpretation. State is isolated between sessions but does not isolate their working directories.
+基线包含已有工作；原先就存在且未再变化的未提交内容不会触发提醒。基线之后由其他进程造成的变化无法归因于模型。快照是观察，不是文件系统事务：并发修改可能使据此作出的判断失效。不同会话的状态相互隔离，但工作目录并不因此隔离。
 
-## Repository content and validation
+## 仓库内容与校验
 
-The plugin scripts do not write project knowledge. The agent follows the project-owned convention, and can decline unnecessary writes. The optional note checker validates structure only in files bearing `<!-- repo-knowledge:decision -->`; it leaves unmarked ADR formats alone, skips subtrees named `archived`, and never creates a notes directory. It still reads scanned Markdown to find the marker, so unmarked files remain subject to its read and path-safety limits. The [configuration reference](configuration.md) describes command results and scan limits. It checks structure and local file links, not truthful reasoning, requirement coverage, anchor targets or external sites.
+插件脚本不写项目知识。Agent 遵循项目自己的约定，可以不做无必要的写入。可选笔记检查器只校验带有 `<!-- repo-knowledge:decision -->` 标记的文件结构，不改变未标记的 ADR 格式，跳过所有名为 `archived` 的子树，也从不创建笔记目录。为查找标记，它仍会读取扫描到的 Markdown，因此未标记文件也受读取和路径安全限制。[配置参考](configuration.md) 说明命令结果与扫描上限。检查器校验结构和本地文件链接，不验证理由是否真实、需求是否完整覆盖、锚点目标或外部网站。
 
-The operator commands do not prove native plugin behavior. The [verification layers](testing.md) distinguish direct documentation review, deterministic checks, native discovery and small model-driven acceptance tasks. Actual dated results belong in [VERIFICATION.md](../VERIFICATION.md); the mechanics on this page are not a claim that every branch has been observed in a native host.
+操作者命令不能证明原生插件行为。[验证层次](testing.md) 区分直接文档审阅、确定性检查、原生发现与小型模型驱动验收任务。带有实际日期的结果应记录在 [VERIFICATION.md](../VERIFICATION.md)；本页说明机制，不声称每个分支都已在原生宿主中观察到。

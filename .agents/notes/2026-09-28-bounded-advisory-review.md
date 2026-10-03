@@ -1,48 +1,48 @@
-# Decision: Bound the knowledge-maintenance reminder
+# Decision: 为知识维护提醒设定边界
 
 <!-- repo-knowledge:decision -->
 Status: implemented
 
 ## Problem
-Standing instructions can be overlooked during a long coding task. A file-based check cannot determine whether a change needs new explanation, and a missing Markdown diff is not evidence of a documentation defect. A useful reminder therefore needs to ask for judgment without demanding unnecessary writing or trapping the user in a continuation loop.
+长期有效的指令可能在较长的编码任务中被忽略。基于文件的检查无法判断某项改动是否需要补充说明，而没有 Markdown 差异也不能证明文档存在缺陷。因此，有用的提醒应当要求 Agent 作出判断，而不是强求不必要的写作，也不能让使用者陷入不断继续执行的循环。
 
-The later native integration also exposed an ownership problem: the hook's plugin-data directory was outside the model tool sandbox, so having the model persist its own review could fail even after legitimate project work. Repeated or out-of-order Stop messages introduced a separate risk: a previously reported review could be incorrectly attached to a newer filesystem snapshot.
+后续原生集成还暴露了职责归属问题：Hook 的插件数据目录位于模型工具沙箱之外，因此，即使项目工作本身合规，让模型持久化自己的审查结果仍可能失败。重复或乱序的 Stop 消息还带来了另一种风险：此前报告的审查结果可能被错误地关联到更新的文件系统快照。
 
 ## Decision
-Inject the maintenance duties at session startup and after compaction. Track a bounded per-turn Git baseline and accept separate self-reported docs/notes outcomes after the final edit. An unmatched change can request one review continuation; subsequent stops pass. Scripts never write the project's documentation.
+在会话启动和上下文压缩后注入维护职责。跟踪每轮有界的 Git 基线，并在最后一次编辑后接收分别针对文档和笔记的自报结果。未匹配到审查结果的改动可以触发一次继续执行的审查请求；后续 Stop 均放行。脚本绝不写入项目文档。
 
-Keep knowledge judgment with the agent and receipt persistence with the host Stop hook. The agent reports independent outcomes in its final answer; the host recognizes a bounded, strict last-line grammar and associates the report with its current snapshot. This keeps the default protocol within existing model write permissions and avoids a transcript reader or another model inside the hook. The explicit review CLI remains available for compatibility, not as a requirement for normal completion.
+知识判断由 Agent 作出，回执持久化由宿主 Stop Hook 负责。Agent 在最终回答中分别报告各项结果；宿主仅识别有界、严格的末行语法，并将报告关联到当前快照。这样，默认协议可以在模型现有写入权限内运作，也无需在 Hook 中加入对话记录读取器或另一个模型。显式审查 CLI 仍为兼容用途保留，但不作为正常完成任务的必要步骤。
 
-Keep observed valid-message history separate from the latest reviewed snapshot. Remember an observed message even if no review was needed when it arrived; otherwise replaying it after an edit could manufacture freshness. Persist the reminder budget before asking for continuation. When safe tracking or persistence is unavailable, fail open rather than substitute an unbounded retry, a new write permission or an assumed successful review. Current mechanics and limits are owned by [architecture](../../docs/architecture.md).
+将已观察到的有效消息历史与最近已审查快照分开保存。即使消息到达时无需审查，也要记住这条消息；否则，在编辑之后重放它就可能制造出“刚完成审查”的假象。在请求继续执行之前，先持久化提醒次数预算。如果无法安全跟踪或持久化，则降级放行，而不是改用无限重试、扩大写入权限，或假定审查已成功。当前机制及其限制由[架构文档](../../docs/architecture.md)统一维护。
 
 ## Alternatives considered
-The original reminder decision considered the following approaches:
+最初的提醒决定考虑过以下方案：
 
-- Requiring a Markdown diff would reward unnecessary documents and reject correct mechanical changes.
-- Running another model inside a hook would add credentials, latency, cost and potentially a second writer.
-- Using only standing prose would avoid runtime state but provide no deterministic missed-check reminder.
+- 强制要求 Markdown 差异，会鼓励不必要的文档，并拒绝本来正确的机械修改。
+- 在 Hook 中运行另一个模型，会增加凭据、延迟、费用，还可能引入第二个写入者。
+- 仅依靠长期有效的文字指令，可以省去运行时状态，但无法提供确定性的遗漏检查提醒。
 
-The later protocol has evidence for two concrete corrections. Model-written receipts were implemented, but the recorded native sandbox failure made them unsuitable as the default. Remembering valid messages only when a new receipt was written left unchanged and already-reviewed snapshots open to later replay; the recorded regression review identified that gap and the current implementation tracks those observations separately.
+后续协议有两项具体修正的证据。模型写入回执曾经实现，但已记录的原生沙箱失败说明它不适合作为默认方式。只有写入新回执时才记住有效消息，会使未改变及已审查的快照仍可能在之后遭到消息重放；已记录的回归审查发现了这个缺口，当前实现会单独跟踪这些消息观察记录。
 
-There is no recorded comparison establishing that eight remembered hashes or seven-day state expiry are optimal. They are current bounded implementation choices, not measured semantic guarantees. Transcript parsing and wider model write access are excluded by the selected boundary; this record does not claim they were tested alternatives.
+没有已记录的比较能够证明，记住八个哈希或让状态在七天后过期是最优选择。它们只是当前实现中用于控制规模的选项，不是经过测量的语义保证。所选职责边界排除了对话记录解析和更宽泛的模型写入权限；本记录并不声称这些是经过测试的替代方案。
 
 ## Consequences
-The mechanism can remind without dictating that a note must exist. It accepts honest not-needed or deferred outcomes and cannot prove those judgments are correct. Host-owned persistence removes the normal receipt-writing tool call and its sandbox dependency, but requires the host to supply the current final answer and the agent to use the agreed format.
+该机制可以提醒维护，而不强制要求必须存在笔记。它接受如实报告的 `not-needed` 或 `deferred` 结果，但无法证明这些判断正确。由宿主持久化，省去了正常流程中用于写入回执的工具调用及其沙箱依赖，但仍要求宿主提供当前最终回答，并要求 Agent 使用约定格式。
 
-The one-reminder budget and fail-open errors protect usability at the expense of enforcement. An unavailable host field, incomplete snapshot, missing/expired state, lock or write failure, or exhausted message-history budget can leave changes without a fresh receipt. No continuation is not the same as successful review. A fresh answer can report the same outcomes, but a different message hash still does not prove a new semantic check.
+只提醒一次的预算和出错时降级放行的策略，以降低约束强度为代价保护了可用性。宿主字段不可用、快照不完整、状态缺失或过期、加锁或写入失败，以及消息历史预算耗尽，都可能使改动缺少新回执。没有触发继续执行，不等于审查成功。新的回答可以报告相同结果，但消息哈希不同仍不能证明进行过新的语义检查。
 
-Git changes from another process remain indistinguishable from agent edits. Per-turn state and locking prevent state collisions; they do not isolate the shared worktree or prove that a snapshot and final answer describe the same authorized edits. Existing permissions, code review and application tests remain necessary.
+其他进程产生的 Git 改动仍然无法与 Agent 编辑区分。按轮保存状态及加锁可以防止状态冲突，却不能隔离共享工作树，也无法证明快照与最终回答描述的是同一组已获授权的编辑。现有权限、代码审查和应用测试仍不可少。
 
 ## Evidence
-This record retains the original 2026-09-28 advisory decision. Its host-owned persistence and replay rationale were consolidated on 2026-10-03 from the existing implementation, tests and recorded 2026-09-30 findings; this is retrospective clarification, not a newly implemented protocol or an assertion that all details were chosen on September 28.
+本记录保留了 2026-09-28 最初的提醒式设计决定。有关宿主持久化和消息重放的理由，于 2026-10-03 根据现有实现、测试以及已记录的 2026-09-30 发现整合而成；这是回溯性澄清，不是新实现的协议，也不声称所有细节都在 9 月 28 日作出了选择。
 
-- Observed history: [VERIFICATION.md](../../VERIFICATION.md) records the model-side plugin-data sandbox failure, later native host-owned receipts without widened model permissions, and the two complete-snapshot replay corrections. At the original decision date, native delivery and model behavior were unverified.
-- Current implementation: [runtime.mjs](../../scripts/lib/runtime.mjs) separates observed hashes, review digest and reminder budget; [final-status.mjs](../../scripts/lib/final-status.mjs) reads only the supplied current message; [store.mjs](../../scripts/lib/store.mjs) and [hook.mjs](../../scripts/hook.mjs) implement bounded state and the fail-open process boundary.
-- Deterministic evidence: [final-status tests](../../tests/final-status.test.mjs) exercise a real permission-denied model-side writer followed by host collection, stale and out-of-order messages, unchanged/already-reviewed observations, and receipt collection after a reminder. [Runtime tests](../../tests/runtime.test.mjs) cover independent turns, unchanged dirt, duplicate prompts, expired/corrupt state and the one-reminder budget.
-- Limits: the recorded native runs support normal collection in their specific CLI/model/Linux setup. The exact replay sequences and missing-status reminder-to-continuation path remain deterministic coverage, not completed native branch acceptance. Neither these tests nor successful receipt storage establishes model-quality reliability.
+- 已观察历史：[验证记录](../../VERIFICATION.md)记录了模型侧写入插件数据时的沙箱失败、后续在不扩大模型权限的前提下由原生宿主保存回执的结果，以及针对完整快照的两项重放修正。在最初作出决定时，原生交付和模型行为尚未验证。
+- 当前实现：[runtime.mjs](../../scripts/lib/runtime.mjs)将已观察消息的哈希、审查摘要与提醒次数预算分开保存；[final-status.mjs](../../scripts/lib/final-status.mjs)只读取传入的当前消息；[store.mjs](../../scripts/lib/store.mjs)和[hook.mjs](../../scripts/hook.mjs)实现有界状态及降级放行的进程边界。
+- 确定性证据：[最终状态测试](../../tests/final-status.test.mjs)覆盖模型侧写入者实际遭遇权限拒绝后由宿主采集回执、旧消息和乱序消息、未改变或已审查快照上的消息观察记录，以及提醒后的回执采集。[运行时测试](../../tests/runtime.test.mjs)覆盖独立轮次、未改变的已有未提交改动、重复提示、过期或损坏的状态，以及只提醒一次的预算。
+- 限制：已记录的原生运行，支持在其特定 CLI、模型及 Linux 环境中正常采集回执这一结论。精确的重放序列，以及缺少状态行时从提醒到继续执行的路径，仍只有确定性测试覆盖，尚未完成原生分支验收。这些测试和回执成功存储，都不能证明模型质量可靠。
 
-## Reconsider when
-A stable host API can identify authorized task edits and surface a low-cost semantic review signal without introducing a second writer. Any stronger blocking policy needs measured false-positive rates and an escape path.
+## 重新考虑的条件
+稳定的宿主 API 能识别已获授权的任务编辑，并在不引入第二个写入者的前提下提供低成本的语义审查信号。任何更强的阻断策略，都需要测量误报率并提供退出路径。
 
-## Related
-[Architecture](../../docs/architecture.md) owns current behavior. The separate [native packaging and Git isolation decision](2026-09-30-native-packaging-and-git-isolation.md) owns manifest discovery and executable Git-configuration risks; it remains active and is not superseded by this clarification.
+## 相关记录
+[架构文档](../../docs/architecture.md)负责当前行为。独立的[原生打包与 Git 隔离决定](2026-09-30-native-packaging-and-git-isolation.md)负责 manifest 发现及可执行 Git 配置的风险；它仍然有效，不被本次澄清取代。

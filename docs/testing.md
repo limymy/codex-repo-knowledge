@@ -1,97 +1,88 @@
-# Verification layers
+# 分层验证
 
-The layers below have different claims. Passing one does not establish another.
+以下各层验证所能支持的结论不同。某一层通过，不代表其他层也已得到验证。
 
-## Direct documentation review
+## 直接审阅文档
 
-Maintain repository documentation directly under the same [writing rules](../skills/repo-knowledge/references/current-docs.md) used by the plugin. A maintainer can inspect source, update the owning guide and review the complete affected sections without a Codex model run. Check facts, applicable conditions, compatibility guarantees, failure behavior and evidence limits; verify relevant commands and local links. Do not create a decision record unless there is a genuine lasting choice to explain.
+直接维护仓库文档时，遵循插件采用的同一套[写作规则](../skills/repo-knowledge/references/current-docs.md)。维护者可以检查源码、更新负责承载相关说明的指南，并完整审阅受影响章节，无需运行 Codex 模型。应检查事实、适用条件、兼容性保证、失败行为和证据边界，并核验相关命令与本地链接。除非确有需要解释的长期选择，否则不要创建决定记录。
 
-For prose-only changes, start with `git diff --check` and `npm run check` in a clean source checkout. The package checker reads distributable files, so keep credentials, Codex profiles and test-run evidence outside that checkout. It checks local link targets and package consistency, not factual accuracy or `SHA256SUMS`. Update an affected checksum manifest separately when preparing a distribution.
+纯文字修改应先在干净的源码检出目录中运行 `git diff --check` 和 `npm run check`。包检查器会读取可分发文件，因此凭据、Codex 配置目录和测试运行证据应放在该检出目录之外。它检查本地链接目标和包的一致性，不检查事实准确性或 `SHA256SUMS`。准备分发包时，应另行更新受影响的校验和清单。
 
-The inventory behind package checking is filesystem-wide, not `git ls-files` and
-not `.gitignore`-aware. [package-files.mjs](../scripts/package-files.mjs) skips
-entries named `.git`, `node_modules`, `.evals`, `dist` and `coverage`, rejects
-symlinks, and reads other regular files, including hidden and untracked files.
-Use an intended source-only tree; a clean Git status alone does not establish
-that ignored local files are absent. `npm run pack:files` prints a JSON inventory
-with sizes and hashes; it creates neither an archive nor `SHA256SUMS`. Review the
-inventory and verify any separately prepared archive or checksum manifest against
-its intended contents rather than treating a successful package check as that
-verification.
+包检查所用的文件清单来自整个文件系统树，不依赖 `git ls-files`，也不遵循 `.gitignore`。[package-files.mjs](../scripts/package-files.mjs) 会跳过名为 `.git`、`node_modules`、`.evals`、`dist` 和 `coverage` 的条目，拒绝符号链接，并读取其他普通文件，包括隐藏文件和未跟踪文件。应使用仅包含预期源码的目录树；Git 状态干净，并不能证明其中没有被忽略的本地文件。`npm run pack:files` 会输出包含大小和散列值的 JSON 文件清单，既不创建归档包，也不创建 `SHA256SUMS`。应审阅该清单，并根据预期内容核验另行准备的归档包或校验和清单，不能把包检查通过当作这些核验已经完成。
 
-If the change alters instructions that govern model behavior, review the text first and then select a small real task for that behavior. Grammar, layout or factual corrections to user documentation do not by themselves require another model run. Model-generated text remains a candidate for review, never the authority for current behavior.
+如果修改涉及约束模型行为的指令，应先审阅文本，再选择一个能验证该行为的小型真实任务。用户文档中的语法、排版或事实修正，本身不要求重新运行模型。模型生成的文本始终只是待审阅的候选内容，不能作为当前行为的权威依据。
 
-## Offline deterministic suite
+## 离线确定性测试
 
-Run `npm run verify`. It uses Node's built-in test runner, real temporary Git repositories and real Node hook subprocesses supplied with documented JSON inputs. It checks instruction output, bounded reminders, unchanged pre-existing dirt, duplicate/concurrent events, receipts and stale digests, traversal/symlink refusal, budgets, state corruption, note structures and package consistency.
+运行 `npm run verify`。它使用 Node 内置测试运行器、真实的临时 Git 仓库，以及接收文档约定 JSON 输入的真实 Node Hook 子进程。检查范围包括指令输出、有界提醒、未再变化的既有未提交改动、重复与并发事件、回执与过时摘要、拒绝路径穿越和符号链接、资源预算、状态损坏、记录结构及包一致性。
 
-Choose checks by the contract affected, not by a target test count. `npm run verify` runs package consistency once, then all deterministic tests; `npm test` alone does not check the live package. Filesystem-only checks use temporary directories; committed Git fixtures are reserved for repository snapshots, lifecycle behavior and evaluation baselines.
+应按受影响的契约选择检查，而不是追求某个测试数量。`npm run verify` 先执行一次包一致性检查，再运行全部确定性测试；单独运行 `npm test` 不会检查当前包。仅涉及文件系统的检查使用临时目录；带提交的 Git 测试夹具只用于仓库快照、生命周期行为和评估基线。
 
-| Group | What a failure would mean | Keep coverage for |
+| 分组 | 失败意味着什么 | 应保留的覆盖范围 |
 | --- | --- | --- |
-| `runtime.test.mjs` | Guidance, change detection or bounded reminders no longer follow the supported lifecycle | startup/resume/clear/compact, existing dirt, commits, disabled/plan/subagent scope, receipt freshness |
-| `final-status.test.mjs` | The host loses a genuine review or accepts an unrelated/replayed answer | strict final line, independent statuses, read-only model filesystem, one-reminder continuation, all observed replay branches |
-| `safety.test.mjs` | A local check escapes its scope, executes repository configuration or blocks work unsafely | path/symlink/FIFO boundaries, Git filters and lazy fetch, submodules, staged/worktree identity, budgets, fail-open errors |
-| `diagnostics.test.mjs` | Optional troubleshooting leaks content, changes behavior or grows without bound | default off, privacy, retention, bad state/locks, reader and legacy CLI compatibility |
-| `notes.test.mjs` | The opt-in note checker rejects existing conventions or accepts malformed opted-in records | lifecycle structure, real local links, archive exclusion, no-op behavior; this is not a writing-quality grader |
-| `tooling.test.mjs` and package check | Distribution or local verification gives a false result | explicit package inventory, CRLF, safe evaluation preparation, no false model pass, bounded native-probe failures |
+| `runtime.test.mjs` | 指导信息、变更检测或有界提醒不再遵循受支持的生命周期 | startup/resume/clear/compact、既有未提交改动、提交、禁用/计划/子代理作用域、回执新鲜度 |
+| `final-status.test.mjs` | 宿主丢失真实审阅结果，或接受无关/重放的回答 | 严格的末行格式、独立状态、模型文件系统只读、一次提醒后的续跑、所有已观察到的重放分支 |
+| `safety.test.mjs` | 本地检查超出作用域、执行仓库配置，或以不安全的方式阻塞工作 | 路径/符号链接/FIFO 边界、Git 过滤器与延迟获取、子模块、暂存区/工作树状态标识、资源预算、失败时放行的错误处理 |
+| `diagnostics.test.mjs` | 可选故障排查泄露内容、改变行为，或无界增长 | 默认关闭、隐私、保留策略、异常状态/锁、读取器与旧版 CLI 兼容性 |
+| `notes.test.mjs` | 按标记选择检查的笔记检查器拒绝既有约定，或接受格式错误且已纳入检查的记录 | 生命周期结构、真实本地链接、排除归档、无操作行为；它不是写作质量评分器 |
+| `tooling.test.mjs` 与包检查 | 分发或本地验证给出错误结论 | 明确的包文件清单、CRLF、安全的评估准备、不会误报模型验收通过、原生探测的失败处理有界 |
 
-The cheap status combinations and unsafe-path inputs remain separate cases so failures identify the offending value. Actual regressions are not removed merely because they share a setup or an expected error.
+开销较小的状态组合和不安全路径输入仍应保留为独立用例，以便失败时定位具体问题值。不能仅因实际回归用例共用准备步骤或预期错误，就将其移除。
 
-The package checker is repository-specific, not the full upstream manifest schema or a Codex loader. The Hook subprocess tests are simulations of the host protocol, not native Codex events. Git commits in these tests create isolated fixture baselines only. No authentication, npm download or model calls are required.
+包检查器针对本仓库编写，并不实现上游完整的清单结构规范，也不是 Codex 加载器。Hook 子进程测试模拟的是宿主协议，并非原生 Codex 事件。这些测试中的 Git 提交只用于创建隔离的夹具基线。测试无需身份认证、npm 下载或模型调用。
 
-## Native CLI smoke
+## 原生 CLI 冒烟检查
 
-Run `npm run smoke:codex`. `RK_CODEX_BIN` can point to an absolute Codex executable. The script runs `--version`, registers this local marketplace and lists it in a temporary HOME/CODEX_HOME, then removes that temporary state. It does not modify the user's profile, copy credentials, trust/execute hooks, or call a model.
+运行 `npm run smoke:codex`。可用 `RK_CODEX_BIN` 指向 Codex 可执行文件的绝对路径。脚本先运行 `--version`，再在临时 HOME/CODEX_HOME 中注册并列出这个本地 marketplace，最后移除临时状态。它不会修改用户配置目录、复制凭据、信任或执行 Hook，也不会调用模型。
 
-The script also starts the native app-server and calls only `skills/list` and `hooks/list`. It requires both installed skills and all three hook definitions, validates startup/resume/clear/compact matching, and requires untrusted hook state. No thread or model is started. Exit 0 confirms these operations and discovery checks; exit 2 means no executable; exit 1 is a failure. Hook execution and model behavior remain not-run.
+脚本还会启动原生 app-server，但只调用 `skills/list` 和 `hooks/list`。它要求两个已安装技能和全部三个 Hook 定义都能被发现，验证 startup/resume/clear/compact 的匹配，并要求 Hook 处于未信任状态。不会启动任何线程或模型。退出码 0 表示这些操作和发现检查通过；退出码 2 表示找不到可执行文件；退出码 1 表示失败。Hook 执行和模型行为仍属于未运行项。
 
-## Genuine model acceptance
+## 真实模型验收
 
-Start with the [functional contract and continuous scenarios](functional-contract.md). Independent one-turn fixtures below do not establish later retrieval, proposal transitions or stale-rule refresh.
+先阅读[功能契约与连续场景](functional-contract.md)。下面这些彼此独立的单轮夹具，不能证明后续检索、提案状态转换或过时规则刷新有效。
 
-### Minimal native checks
+### 最小原生检查
 
-Choose the claim to establish before starting the model. A useful small sequence is:
+启动模型前，先明确需要证明什么。一个实用的小型流程如下：
 
-1. Start a native session in a disposable repository with an existing owning document, and submit one ordinary, bounded behavior-change task. Do not tell the model which document to edit. Verify the native SessionStart and UserPromptSubmit events, review the actual reads and changes, and observe Stop and the matching changed-work receipt.
-2. Start a fresh read-only task that needs the updated knowledge. Check targeted retrieval and the answer, then verify that the project is unchanged. This is evidence for that retrieval case, not general recall reliability.
-3. Add resume/compact, scope changes, decision lifecycle or missing-status recovery only when that is the specific acceptance gap. A normal no-op Stop or a valid first answer does not exercise the missing-status reminder branch.
+1. 在一次性仓库中启动原生会话，仓库中应已有负责承载相关说明的文档，然后提交一个普通、范围明确的行为变更任务。不要告诉模型应修改哪份文档。核验原生 SessionStart 和 UserPromptSubmit 事件，审阅实际读取与修改，并观察 Stop 及与之匹配的变更工作回执。
+2. 启动一个需要使用更新后知识的全新只读任务。检查针对性检索及回答，再确认项目未发生变化。这只能为该检索用例提供证据，不能证明一般性的检索可靠性。
+3. 只有在具体的验收缺口涉及 resume/compact、作用域变化、决定生命周期或缺失状态恢复时，才添加相应检查。正常的无操作 Stop 或首次就有效的回答，都不会覆盖缺失状态提醒分支。
 
-Do not turn this sequence into a full-repository documentation-writing assignment. Direct documentation review and native behavior acceptance serve different purposes. A short end-to-end case must still check semantic adoption; merely observing a script exit or a receipt is insufficient.
+不要把这个流程变成全仓库文档编写任务。直接文档审阅与原生行为验收各有用途。即使是简短的端到端用例，也必须检查模型是否在语义上真正采纳了规则；仅观察脚本退出或收到回执并不足够。
 
-Record model/host errors separately from plugin outcomes. If a run is interrupted, preserve completed stages, partial changes and the last observed activity. A total deadline, stream disconnection or command exit is not a substitute for locating the unfinished step. Resume only the unfinished task when appropriate; do not rerun completed setup or attribute all elapsed time to hooks. Keep credentials and detailed trial infrastructure outside the package.
+模型/宿主错误应与插件结果分开记录。如果一次运行中断，应保留已完成阶段、部分修改和最后观察到的活动。总时限到期、流式连接断开或命令退出，都不能替代对未完成步骤的定位。适当时只恢复未完成的任务，不要重跑已完成的准备步骤，也不要将全部耗时归因于 Hook。凭据和详细试验基础设施应留在包外。
 
-### Selecting an existing fixture
+### 选择现有夹具
 
-On an authenticated development machine, install the plugin in the normal Codex profile and inspect/trust its hooks. Do not send credentials to the plugin or another person. First use a disposable project; do not test on production or uncommitted research work.
+在已完成身份认证的开发机器上，将插件安装到正常使用的 Codex 配置目录中，并检查、信任其 Hook。不要把凭据发送给插件或其他人。先使用一次性项目，不要在生产环境或尚未提交的研究工作上测试。
 
 ```bash
 node scripts/eval.mjs prepare --out /absolute/path/to/new-evaluation
 ```
 
-The directory must not exist. The script creates six independent Git fixtures, their baseline hashes and prompts. No AGENTS.md or pasted bootstrap is placed in the fixtures, so the experiment does not accidentally substitute manual instructions for plugin delivery.
+目标目录必须不存在。脚本会创建六个独立的 Git 夹具、各自的基线散列和提示词。夹具中不会放置 AGENTS.md 或粘贴的引导指令，避免实验无意中用手工指令替代插件交付。
 
-For each fixture, start a fresh Codex session in that directory using the same model/settings and the installed plugin. Send only that case's ordinary prompt from PROMPTS.md. Do not explicitly ask the agent to load the plugin, update docs or write notes. Keep file/tool permission settings unchanged. Observe in `/hooks` and the client's visible event information that SessionStart/UserPromptSubmit hooks actually ran; after the task, check Stop behavior. Record exact Codex version, model/provider, hook trust state, settings, case id, result and whether a reminder caused an extra continuation. Do not infer activation only from the final prose.
+对每个夹具，都应在其目录中使用相同模型/设置及已安装的插件，启动全新的 Codex 会话。只发送 PROMPTS.md 中该用例的普通提示词。不要明确要求 Agent 加载插件、更新文档或编写记录。保持文件/工具权限设置不变。通过 `/hooks` 和客户端可见的事件信息，观察 SessionStart/UserPromptSubmit Hook 是否确实运行；任务结束后，检查 Stop 行为。记录准确的 Codex 版本、模型/提供商、Hook 信任状态、设置、用例 ID、结果，以及提醒是否引发了额外续跑。不能仅凭最终文字推断插件已激活。
 
-After all cases:
+所有用例结束后，运行：
 
 ```bash
 node scripts/eval.mjs grade --out /absolute/path/to/new-evaluation
 ```
 
-The grader executes independent behavior assertions and checks file-level policy, but deliberately leaves semantic review pending. Inspect each README/decision diff for truthfulness, scope, actual alternatives, supersession links and invented evidence. A receipt or arbitrary Markdown change does not satisfy this review. The original fixture HEAD must remain unchanged: the prompts do not authorize commits.
+评分器会执行独立的行为断言，并检查文件级策略，但刻意将语义审阅保留为待完成项。应检查每份 README/决定记录的差异，核验真实性、作用域、实际备选方案、取代关系链接，以及是否捏造证据。回执或任意 Markdown 修改，都不能满足这项审阅要求。原始夹具的 HEAD 必须保持不变：提示词并未授权提交。
 
-Select the smallest scenario that exercises the changed behavior. The single-turn fixtures provide objective code/file-policy checks; continuity scenarios add cross-task retrieval, changing rules and decision lifecycle. Their shared setup is not a requirement to run both suites after every edit. For writing changes, inspect actual generated prose and retained constraints; a structural check cannot substitute for that review.
+选择能够覆盖所改行为的最小场景。单轮夹具提供客观的代码/文件策略检查；连续场景则补充跨任务检索、规则变化和决定生命周期。两类测试共用准备流程，并不意味着每次修改后都必须运行两套测试。对写作修改，应检查实际生成的文字及保留下来的约束；结构检查不能替代这项审阅。
 
-Repeat trials and add an uninstalled control only when measuring reliability or causal improvement. Use fresh directories and report denominators, failures, false-positive notes and added continuations. For a specific regression, one targeted reproduction plus its relevant review is the appropriate starting point. A successful fixture remains bounded evidence, not a universal guarantee.
+只有在测量可靠性或因果改进时，才需要重复试验并加入未安装插件的对照组。使用全新目录，并报告统计分母、失败情况、不必要的笔记，以及增加的续跑次数。对于具体回归，应从一次针对性复现及相关审阅开始。夹具通过始终只是有边界的证据，不是普遍保证。
 
-The separate provider-driven acceptance launcher used during development is not part of this package or CI. Its historical results remain in [VERIFICATION.md](../VERIFICATION.md); temporary credentials, profiles and trial infrastructure are not imported into the project.
+开发期间使用的独立、由模型提供商驱动的验收启动器，不属于本包或 CI。其历史结果保留在 [VERIFICATION.md](../VERIFICATION.md)；临时凭据、配置目录和试验基础设施不会引入项目。
 
-## Platforms and CI
+## 平台与 CI
 
-The shipped CI file configures offline Linux/macOS/Windows tests on Node 20 and 22. Check GitHub Actions for the exact installed commit; prior published-commit results are recorded in VERIFICATION.md. Windows/macOS native hook launch, different sandboxes and plugin update/retrust require their own tests. No platform parity claim follows from a portable-looking Node command.
+随包提供的 CI 文件配置了 Node 20 和 22 上的离线 Linux/macOS/Windows 测试。应在 GitHub Actions 中查看实际安装的那个提交所对应的结果；此前已发布提交的结果记录在 VERIFICATION.md 中。Windows/macOS 原生 Hook 启动、不同沙箱，以及插件更新/重新信任，都需要单独测试。不能因为 Node 命令看起来可移植，就宣称各平台行为一致。
 
-## Local command-hook evidence
+## 本地命令 Hook 的证据
 
-Cloud-orchestrated tasks do not support this plugin's command hooks, even with local execution. Use actual locally orchestrated Work/Codex threads for native event checks. The optional [bounded diagnostic reader](hook-diagnostics.md) distinguishes script instrumentation from host delivery or model consumption; subprocess tests and manual script runs are not native lifecycle proof.
+云端编排的任务不支持本插件的命令 Hook，即使任务在本地执行也不支持。核验原生事件时，应使用真正由本地编排的 Work/Codex 线程。可选的[有界诊断读取器](hook-diagnostics.md)会区分脚本埋点、宿主交付和模型采用；子进程测试与手工运行脚本，都不能作为原生生命周期事件的证据。
