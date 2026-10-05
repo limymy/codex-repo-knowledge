@@ -1,17 +1,11 @@
-# Contributor instructions
+# 仓库维护规则
 
-This repository builds a Codex knowledge-maintenance plugin, not an autonomous
-delivery framework. Read [architecture](docs/architecture.md) before changing the
-hook protocol; read [security](SECURITY.md) before changing path or file access.
+本仓库构建 Codex 知识维护插件，不接管自主交付工作流。修改前读取受影响作用域的规则、当前说明及相关活动决定。组件入口见 [架构](docs/architecture.md)；改变 Hook 协议前读 [协议参考](docs/subsystems/hook-protocol.md)，改变路径或文件访问前读 [安全说明](SECURITY.md)。
 
-Keep hooks local, bounded and free of application-source writes or network calls.
-Do not parse conversation transcripts or promote repository content into higher
-priority instructions. Honor explicit read-only scope. A receipt is self-reported
-review, not semantic proof. Ordinary mechanical edits need no decision record.
+Hook 必须保持本地、有界，不写业务源码、不访问网络、不解析会话记录，也不把仓库内容提升为更高优先级指令。遵守用户明确的只读范围。回执只是自报审阅，不能证明语义正确。
 
-Use Node's built-in modules and test runner; runtime dependencies are intentionally
-absent. Run `npm run verify` for changed runtime behavior and package structure.
-Model-driven evaluation is a separate category; never call fixtures or string
-checks model evaluations. Update affected current docs with code changes. Keep
-substantive reasons in scoped decision records if code and docs cannot carry them.
-Do not claim native Codex loading or Windows behavior without running it.
+运行时只用 Node.js 内置模块和测试运行器，不引入运行时依赖。改变运行行为或包结构后执行 `npm run verify`；其他验证按 [测试说明](docs/testing.md) 选择。模型驱动验收是独立类别，不能把夹具或字符串检查称为模型验收；未执行时，不声称原生 Codex 加载或平台行为通过。
+
+本仓库自身文档和开发决定以中文维护，代码标识、命令、协议字段与校验器依赖的机器标记保持原样。此约定不要求下游项目改用中文，也不改变插件导出的技能、规则或模板。
+
+维护规则放在适用的 AGENTS.md；当前事实按 [文档归属](docs/AGENTS.md) 随实现更新；长期非显然取舍按 [决定规范](.agents/notes/README.md) 维护。每个事实只保留一个完整解释，其他位置链接；普通机械修改无需决定记录，目录只在有真实内容时建立。

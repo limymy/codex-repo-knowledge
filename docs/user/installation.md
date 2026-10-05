@@ -13,7 +13,7 @@ git --version
 codex plugin --help
 ```
 
-已测环境为 Linux CLI 0.159.0-alpha.7，最低兼容版本及 Windows/macOS App 原生执行尚未确定。云编排的 dots/Work Cloud 不支持本地插件命令 Hook，即使执行工具在电脑上。版本与行为证据见 [验证记录](../VERIFICATION.md)。
+已测环境为 Linux CLI 0.159.0-alpha.7，最低兼容版本及 Windows/macOS App 原生执行尚未确定。云编排的 dots/Work Cloud 不支持本地插件命令 Hook，即使执行工具在电脑上。版本与行为证据见 [验证记录](../../VERIFICATION.md)。
 
 ## 从 GitHub 安装
 

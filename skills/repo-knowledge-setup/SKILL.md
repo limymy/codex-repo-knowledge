@@ -12,7 +12,7 @@ preserve all pre-existing work. Do not modify global Codex settings or trust.
 
 Explain the existing owners. Reuse them, and write `.repo-knowledge.json` only
 when non-default paths or a disabled/changed reminder are needed. Use
-[configuration](../../docs/configuration.md). Do not generate empty docs/notes.
+[configuration](../../docs/user/configuration.md). Do not generate empty docs/notes.
 
 If the user requested a persisted repository entry point, merge the relevant
 content from [the block](../../templates/agents-block.md) into existing AGENTS.md;

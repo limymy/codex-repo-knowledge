@@ -6,12 +6,12 @@
 
 ## 按问题找到知识所有者
 
-- 修改 Hook 或定位回执问题：先读 [架构与实现入口](docs/architecture.md)，再查 [活动决定](.agents/notes/README.md) 中已有的约束与理由
-- 修改用户操作、默认值或停用方式：维护 [安装](docs/installation.md) 或 [配置](docs/configuration.md)；README 只保留首次使用所需入口
-- 排查“没有日志、没有提醒、没有回执”：使用 [Hook 核验](docs/hook-diagnostics.md) 区分宿主执行、脚本结果和模型采用，不凭单一现象推断故障
+- 修改 Hook 或定位回执问题：先读 [架构与实现入口](docs/architecture.md) 与 [Hook 协议](docs/subsystems/hook-protocol.md)，再查 [活动决定](.agents/notes/README.md) 中已有的约束与理由
+- 修改用户操作、默认值或停用方式：维护 [安装](docs/user/installation.md) 或 [配置](docs/user/configuration.md)；README 只保留首次使用所需入口
+- 排查“没有日志、没有提醒、没有回执”：使用 [Hook 核验](docs/user/hook-diagnostics.md) 区分宿主执行、脚本结果和模型采用，不凭单一现象推断故障
 - 改变预期能力或验收方式：维护 [功能契约](docs/functional-contract.md) 与 [测试说明](docs/testing.md)；实际版本和运行结果只放 [验证记录](VERIFICATION.md)
 
-先在所属页面维护完整说明，其他页面保留必要的局部保证和链接。决定记录解释非显然取舍，不复制字段清单或逐次测试日志。
+目录与命名见 [文档维护规则](docs/AGENTS.md) 和 [决定记录规则](.agents/notes/README.md)。先在所属页面维护完整说明，其他页面保留必要的局部保证和链接。决定记录解释非显然取舍，不复制字段清单或逐次测试日志。
 
 ## 实现与验证
 

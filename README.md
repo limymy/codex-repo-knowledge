@@ -30,7 +30,7 @@ codex plugin add repo-knowledge@codex-repo-knowledge
 codex plugin list --marketplace codex-repo-knowledge --json
 ```
 
-确认版本与本页一致，再进入目标 Git 项目启动 Codex，通过 `/hooks` 审查插件定义并开启新会话。插件没有 npm 运行时依赖，也不需要单独的 API Key。完整步骤、来源检查、更新与卸载见 [安装指南](docs/installation.md)。
+确认版本与本页一致，再进入目标 Git 项目启动 Codex，通过 `/hooks` 审查插件定义并开启新会话。插件没有 npm 运行时依赖，也不需要单独的 API Key。完整步骤、来源检查、更新与卸载见 [安装指南](docs/user/installation.md)。
 
 之后直接提出普通任务即可，例如：
 
@@ -57,13 +57,13 @@ Agent 会按任务读取适用规则和既有知识，在必要时维护对应�
 { "version": 1, "stopReminder": "off" }
 ```
 
-位置配置、状态格式和停用方式见 [配置说明](docs/configuration.md)。需要确认 Hook 是否实际执行时，使用默认关闭的 [本地诊断](docs/hook-diagnostics.md)。
+位置配置、状态格式和停用方式见 [配置说明](docs/user/configuration.md)。需要确认 Hook 是否实际执行时，使用默认关闭的 [本地诊断](docs/user/hook-diagnostics.md)。
 
 ## 权限与适用边界
 
 Hook 脚本只处理有界的本地检查与插件状态，不修改业务文件、不读取会话日志、不访问网络、不启动额外模型，也不自动提交、推送或发布。写文档仍由当前 Agent 在用户授权范围内完成。
 
-Git 变更检测无法可靠区分并发修改；子模块、检查预算或安全路径等条件不满足时会降级放行。机制与隐私说明见 [架构](docs/architecture.md) 和 [安全说明](SECURITY.md)。已测样本支持核心维护行为，但不代表所有任务、模型或平台都能得到相同结果；[功能目标与验收](docs/functional-contract.md) 说明具体证据边界。
+Git 变更检测无法可靠区分并发修改；子模块、检查预算或安全路径等条件不满足时会降级放行。机制与隐私说明见 [架构](docs/architecture.md) 和 [安全说明](SECURITY.md)。已测样本支持核心维护行为，但不代表所有任务、模型或平台都能得到相同结果；[功能契约](docs/functional-contract.md) 定义行为目标，具体证据及未验范围由 [验证记录](VERIFICATION.md) 维护。
 
 ## 开发与参考
 

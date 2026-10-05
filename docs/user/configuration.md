@@ -61,7 +61,7 @@ node /path/to/plugin/scripts/rk.mjs doctor --cwd /path/to/project
 node /path/to/plugin/scripts/rk.mjs check-notes --cwd /path/to/project
 ```
 
-`doctor` 输出有效配置、Git 可见性和当前快照，不验证原生插件加载。调用方要查看 JSON 的 `snapshot.complete` 和不完整时的 `reason`：命令成功退出也可能返回不完整快照，不能据此判断收尾跟踪可用。快照范围及降级条件见 [架构](architecture.md)。
+`doctor` 输出有效配置、Git 可见性和当前快照，不验证原生插件加载。调用方要查看 JSON 的 `snapshot.complete` 和不完整时的 `reason`：命令成功退出也可能返回不完整快照，不能据此判断收尾跟踪可用。快照范围及降级条件见 [Hook 协议](../subsystems/hook-protocol.md)。
 
 `check-notes` 对带有 `<!-- repo-knowledge:decision -->` 的记录检查格式和本地文件链接，未标记 ADR 不必迁移格式，所有名为 `archived` 的子树会跳过。命令不写文件，也不读取 Hook 日志；输出 `checked` 是实际检查的标记记录数，`errors` 非空时退出码为 1。`checked: 0` 可能只是没有笔记目录或没有采用标记，不能证明项目无需设计记录。
 
