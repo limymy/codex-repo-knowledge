@@ -10,7 +10,7 @@ alpha2 压缩包可以成功安装，但在 Codex CLI 0.159.0-alpha.7 上，原�
 仅保留 Codex 兼容 manifest `.codex-plugin/plugin.json`，以及原生宿主实际能够列出的默认 `hooks/hooks.json` 发现方式；不在兼容 manifest 中设置 `hooks` 字段，也不分发可移植根清单。采用这一布局的理由是它在受测 CLI 上确实暴露了技能和 Hook，而双 manifest 布局没有提供同样的发现结果。
 
 ## Alternatives considered
-曾测试过保留文档所述的便携 manifest，既测试了显式指定 Hook 路径的情况，也测试了未指定的情况；在所观察的 CLI 上，两者都未发现原生 Hook。仅移除兼容 manifest 中的 `hooks` 字段，不能解决双 manifest 布局的发现问题。只保留兼容 manifest 的打包方式则可以。
+测试时保留了文档所述的便携 manifest，分别尝试显式指定和不指定 Hook 路径；受测 CLI 在两种情况下都未发现原生 Hook。只移除兼容 manifest 中的 `hooks` 字段仍不能解决双 manifest 布局的问题；改为只保留兼容 manifest 后，才成功发现 Hook。
 
 这些比较支持所测版本的打包选择，不构成所有宿主版本通用的 manifest 优先级规则，也不表明未采用的格式永远无效。
 

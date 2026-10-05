@@ -23,19 +23,14 @@
 | 决定理由、命名与生命周期 | [00102833 notes/README](https://github.com/deepseek-ai/deepseek-harness/blob/00102833dfaee1da9f48a3a8eae9d34005a75218/.agents/notes/README.md) | [639ed015 notes/README](https://github.com/deepseek-ai/deepseek-harness/blob/639ed015397290b3745d163aafe02ffee4aa3f84/.agents/notes/README.md)、[已实施记录的维护规则](https://github.com/deepseek-ai/deepseek-harness/blob/639ed015397290b3745d163aafe02ffee4aa3f84/.agents/notes/implemented/AGENTS.md) |
 | 写作与完整命题 | [00102833 prose-standard](https://github.com/deepseek-ai/deepseek-harness/blob/00102833dfaee1da9f48a3a8eae9d34005a75218/.agents/skills/dsh-prose-standard/SKILL.md) | [639ed015 prose-standard](https://github.com/deepseek-ai/deepseek-harness/blob/639ed015397290b3745d163aafe02ffee4aa3f84/.agents/skills/dsh-prose-standard/SKILL.md#preserve-the-complete-proposition) |
 
-2026-09-30 的写作补充原先引用浮动的 master；其历史记录不等于当时 master 的确切提交已知。上表提供已核对的固定依据，两个列出的快照均包含保留条件、例外、时序、义务与否定保证的要求。读者定位和仅在易误用处加入小例子是本插件结合这些原则的适配性表述，并非逐字引用。
+2026-09-30 的写作补充原先引用浮动的 master；其历史记录不等于当时 master 的确切提交已知。上表提供已核对的固定依据，两个列出的快照均包含保留条件、例外、时序、义务与否定保证的要求。本插件据此提出面向读者组织内容、仅在易误用处补充小例子的写作要求，并非逐字引用。
 
 ## 目录、命名和内容职责的适配
 
-DSH 在两个固定快照中都保留 `docs/architecture.md`、`docs/testing.md` 等顶层页面，并已有 `docs/user/` 和 `docs/subsystems/`。其结构技能还描述了 `learn/`、`developer/`、`scratch/` 等目标目录，但明确把它视为目标地图，而非大规模迁移的理由；不能把目标地图说成这些快照已有的完整目录。
+DSH 在两个固定快照中都保留 `docs/architecture.md`、`docs/testing.md` 等顶层页面，并已有 `docs/user/` 和 `docs/subsystems/`。其结构技能还描述了 `learn/`、`developer/`、`scratch/` 等目标目录，但明确说明这是一套目标结构，不能据此发起大规模迁移。这些目标目录也不代表快照中实际已有的完整目录。
 
-本仓库采用适合小插件的部分：
+本仓库按小插件的规模采用 DSH 的职责分层和决定目录组织方式。具体目录、命名和维护要求分别见[文档维护规则](AGENTS.md)与[决定记录规则](../.agents/notes/README.md)。
 
-- `docs/architecture.md` 是组件和责任地图；精确机制进入 `docs/subsystems/hook-protocol.md`
-- 安装、配置和 Hook 核验进入 `docs/user/`；功能契约、跨层测试与参考来源继续留在 `docs/` 根层
-- 普通主题页使用小写英文 `kebab-case.md`，当前说明不加日期；AGENTS.md、README.md 等约定入口名称保持原样
-- 决定路径采用 `.agents/notes/{lifecycle}/{class}/YYYY-MM-DD-topic-title.md`，只建立有真实记录的 `implemented/architecture/`，保留原记录日期；具体状态与替代规则见 [notes/README](../.agents/notes/README.md)
-
-这与 DSH 的职责分层和决定目录命名相符，是按项目规模裁剪的组织方式，不是完整复制。我们保留本插件既有的 `# Decision:`、标记与状态字段，不声称与 DSH 的 `# Agent Note:` 格式或检查器等同。目录只决定内容归属，不授权创建空模板、扩大任务或修改下游项目约定。
+决定记录保留本插件既有的 `# Decision:`、标记与状态字段，不等同于 DSH 的 `# Agent Note:` 格式或检查器。目录只决定内容归属，不授权创建空模板、扩大任务或修改下游项目约定。
 
 本插件不复现 DSH 的完整运行时、强制双语配对、网站生成、字数预算或包专属 CI；原生机制与行为适配的差异由 [功能契约](functional-contract.md) 维护。格式检查不能判断语义上是否有必要补写缺失的决定记录。

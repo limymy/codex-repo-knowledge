@@ -1,6 +1,6 @@
 # 功能目标与验收边界
 
-本页定义插件要达到的行为，以及与 DSH 原生机制的差别。如何选择和执行检查见[测试说明](testing.md)；已观察结果、受测版本和未验证边界见[验证记录](../VERIFICATION.md)。目标不因测试夹具存在、格式检查通过或 receipt 存在而自动成立。
+本页定义插件要达到的行为，以及与 DSH 原生机制的差别。如何选择和执行检查见[测试说明](testing.md)；已观察结果、受测版本和未验证边界见[验证记录](../VERIFICATION.md)。有测试夹具、通过格式检查或收到回执，都不能单独证明目标已达到。
 
 ## 目标与非目标
 
@@ -19,13 +19,13 @@
 | --- | --- | --- |
 | 普通任务先了解适用规则 | 未提示使用插件时，先读取目标作用域规则与有关知识，不能只依据已过时的聊天上下文 | [启动职责](../rules/bootstrap.md)、[技能检索步骤](../skills/repo-knowledge/SKILL.md) |
 | 长期约束与一次性要求分开 | 经确认的长期规则维护到适用作用域；一次性任务要求不被提升为永久规则 | [规则维护](../skills/repo-knowledge/references/repository-rules.md) |
-| 当前文档随实质行为变化维护 | 修改真正拥有该事实的 README、指南或 JSDoc；恢复既有正确契约时不改文档迎合旧 bug | [当前文档规范](../skills/repo-knowledge/references/current-docs.md) |
+| 当前文档随实质行为变化维护 | 更新该事实所属的 README、指南或 JSDoc；恢复既有正确契约时不改文档迎合旧 bug | [当前文档规范](../skills/repo-knowledge/references/current-docs.md) |
 | 有价值的取舍可供后续任务复用 | 保留实际选择的理由；机械重命名和明显局部修复不新增流水账式记录 | [决定资格与归属](../skills/repo-knowledge/references/decisions.md) |
-| 方案、当前事实和已实现决定不混淆 | 获准保存但未实施的方案保持 proposed 或项目等价状态；实施后更新原所有者和当前说明，保留真实验证缺口 | [决定生命周期](../skills/repo-knowledge/references/decisions.md) |
+| 方案、当前事实和已实现决定不混淆 | 获准保存但未实施的方案保持 proposed 或项目等价状态；实施后更新原记录和当前说明，保留真实验证缺口 | [决定生命周期](../skills/repo-knowledge/references/decisions.md) |
 | 新决定处理旧记录 | 主动找重叠记录；部分替代保留双方有效内容；反转产生明确替代关系；整合保留独有理由并修复链接 | [替代与整合规则](../skills/repo-knowledge/references/decisions.md) |
 | 后续任务检索并复用知识 | 新会话只给普通开发需求，也会读取前一任务的有关依据；只保持代码输出正确不足以证明检索发生 | [主技能检索步骤](../skills/repo-knowledge/SKILL.md) |
 | 恢复、压缩和作用域变化后重新核对规则 | 读取更新的适用文件，应用新约束但保留仍有效的旧接口契约；同会话进入兄弟作用域时不沿用不适用的旧规则 | [启动职责](../rules/bootstrap.md) |
-| 尊重已有知识位置与权限 | 使用项目既有所有者及生命周期，不建立重复说明；只读请求没有项目文件变化，不自动提交或发布 | [归属规则](../skills/repo-knowledge/references/current-docs.md)、[可选配置](user/configuration.md) |
+| 尊重已有知识位置与权限 | 沿用项目已有的知识存放位置及生命周期，不建立重复说明；只读请求没有项目文件变化，不自动提交或发布 | [归属规则](../skills/repo-knowledge/references/current-docs.md)、[可选配置](user/configuration.md) |
 | 维护负担保持有限 | 不为满足插件制造无用文档、笔记或工具调用；正常收尾与遗漏状态后的辅助提醒分别评价 | [辅助收尾协议](subsystems/hook-protocol.md) |
 
 这些标准要求检查实际读取、改动及知识内容。针对性检索不能由全树灌入上下文代替；诊断只能证明其记录的脚本步骤。某个任务、模型或平台中的样本通过，不构成其他组合的普遍保证。
@@ -36,7 +36,7 @@
 
 DSH 的 [agent-instructions 运行时](https://github.com/deepseek-ai/deepseek-harness/blob/639ed015397290b3745d163aafe02ffee4aa3f84/packages/context/agent-instructions/src/index.ts)在首个请求加载作用域链，跟随成功 read/write/edit 刷新嵌套、变更和移除的规则，并通过带来源的持久消息参与恢复。其[技能目录/加载器](https://github.com/deepseek-ai/deepseek-harness/blob/639ed015397290b3745d163aafe02ffee4aa3f84/packages/skill/tool-skill/src/index.ts)让模型先看到描述，在匹配任务时按需加载全文。
 
-本插件复用 Codex 原生 AGENTS/技能机制，通过 SessionStart 注入固定维护职责，并要求 Agent 在相关任务、作用域变化和恢复后重新检查适用文件。它没有实现 DSH 的文件触碰投影、规则变更消息或会话重放系统。固定职责重注入不等于项目规则已刷新，相关行为必须在真实宿主中观察，不能宣称完全同构。组件职责见[架构地图](architecture.md)，事件和状态细节见 [Hook 协议](subsystems/hook-protocol.md)。
+本插件复用 Codex 原生 AGENTS/技能机制，通过 SessionStart 注入固定维护职责，并要求 Agent 在相关任务、作用域变化和恢复后重新检查适用文件。它没有实现 DSH 的文件触碰投影、规则变更消息或会话重放系统。固定职责重注入不等于项目规则已刷新，相关行为必须在真实宿主中观察，不能声称两者机制完全相同。组件职责见[架构地图](architecture.md)，事件和状态细节见 [Hook 协议](subsystems/hook-protocol.md)。
 
 DSH 的具体目录分类、双语页面、词数预算或完整运行时不是本插件强制迁移目标。项目已有约定优先。
 
