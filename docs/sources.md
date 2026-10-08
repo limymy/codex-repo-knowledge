@@ -14,9 +14,9 @@
 
 ## DSH 的固定参考
 
-最初设计采用 `deepseek-ai/deepseek-harness` 的 [00102833](https://github.com/deepseek-ai/deepseek-harness/tree/00102833dfaee1da9f48a3a8eae9d34005a75218) 快照，2026-09-30 功能复核采用 [639ed015](https://github.com/deepseek-ai/deepseek-harness/tree/639ed015397290b3745d163aafe02ffee4aa3f84)。2026-10-05 的目录与命名整理再次核对这两个固定快照；本页不把其中任何一个称为 DSH 的最新版本。
+最初设计采用 `deepseek-ai/deepseek-harness` 的 [00102833](https://github.com/deepseek-ai/deepseek-harness/tree/00102833dfaee1da9f48a3a8eae9d34005a75218) 快照，2026-09-30 功能复核采用 [639ed015](https://github.com/deepseek-ai/deepseek-harness/tree/639ed015397290b3745d163aafe02ffee4aa3f84)；两者均为固定参考，不代表 DSH 的最新版本。
 
-| 参考主题 | 原始设计基线 | 本次整理所用的固定依据 |
+| 参考主题 | 原始设计基线 | 功能复核的固定依据 |
 | --- | --- | --- |
 | 长期规则与作用域 | [00102833 根 AGENTS](https://github.com/deepseek-ai/deepseek-harness/blob/00102833dfaee1da9f48a3a8eae9d34005a75218/AGENTS.md) | [639ed015 根 AGENTS](https://github.com/deepseek-ai/deepseek-harness/blob/639ed015397290b3745d163aafe02ffee4aa3f84/AGENTS.md) |
 | 文档职责与知识归属 | [00102833 docs/AGENTS](https://github.com/deepseek-ai/deepseek-harness/blob/00102833dfaee1da9f48a3a8eae9d34005a75218/docs/AGENTS.md) | [639ed015 docs/AGENTS](https://github.com/deepseek-ai/deepseek-harness/blob/639ed015397290b3745d163aafe02ffee4aa3f84/docs/AGENTS.md)、[结构目标](https://github.com/deepseek-ai/deepseek-harness/blob/639ed015397290b3745d163aafe02ffee4aa3f84/.agents/skills/dsh-doc/references/structure-hierarchy.md) |
@@ -27,9 +27,7 @@
 
 ## 目录、命名和内容职责的适配
 
-DSH 在两个固定快照中都保留 `docs/architecture.md`、`docs/testing.md` 等顶层页面，并已有 `docs/user/` 和 `docs/subsystems/`。其结构技能还描述了 `learn/`、`developer/`、`scratch/` 等目标目录，但明确说明这是一套目标结构，不能据此发起大规模迁移。这些目标目录也不代表快照中实际已有的完整目录。
-
-本仓库按小插件的规模采用 DSH 的职责分层和决定目录组织方式。具体目录、命名和维护要求分别见[文档维护规则](AGENTS.md)与[决定记录规则](../.agents/notes/README.md)。
+本仓库按小插件规模采用 DSH 的职责分层和决定组织方式；具体目录、命名与维护要求见[文档维护规则](AGENTS.md)和[决定记录规则](../.agents/notes/README.md)。DSH 结构技能中的目标目录不等于固定快照的实际目录，也不授权大规模迁移。
 
 决定记录保留本插件既有的 `# Decision:`、标记与状态字段，不等同于 DSH 的 `# Agent Note:` 格式或检查器。目录只决定内容归属，不授权创建空模板、扩大任务或修改下游项目约定。
 
